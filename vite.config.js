@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/mori-infitown/',
+  base: '/mori-final/',
   server: { host: true, open: true },
   build: { target: 'es2020' },
 });
