@@ -3,9 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stylized Campus</title>
+    <title>Mori Campus</title>
     <style>
-      :root { color-scheme: dark; }
+      :root {
+        color-scheme: dark;
+        --te-bg: #fafaf6;
+        --te-fg: #1a1a1a;
+        --te-muted: #777;
+        --te-border: #e6e3d9;
+        --te-accent: #ff5b2c;
+        --te-accent-hover: #e84c20;
+      }
       html, body {
         margin: 0; padding: 0; height: 100%; overflow: hidden;
         background: #f4d2a5;
@@ -21,12 +29,17 @@
         pointer-events: none;
         letter-spacing: 0.02em;
         z-index: 5;
+        max-width: calc(100% - 36px);
+      }
+      body.dev-mode .hint::after {
+        content: " · DEV · T translate · E rotate · R scale · Esc deselect";
+        color: rgba(160, 60, 30, 0.9);
+        font-weight: 600;
       }
 
+      /* Floating glass action buttons */
       .ui-button {
         position: fixed;
-        top: 18px;
-        right: 18px;
         z-index: 5;
         pointer-events: auto;
         appearance: none;
@@ -50,12 +63,7 @@
           0 0 20px rgba(255, 220, 170, 0.25),
           0 8px 24px rgba(40, 25, 10, 0.22),
           inset 0 1px 0 rgba(255, 255, 255, 0.5);
-        transition:
-          background 0.22s ease,
-          color 0.22s ease,
-          border-color 0.22s ease,
-          box-shadow 0.22s ease,
-          transform 0.18s ease;
+        transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, transform 0.18s ease;
       }
       .ui-button:hover {
         transform: translateY(-1px);
@@ -63,21 +71,16 @@
           rgba(255, 250, 240, 0.32),
           rgba(255, 230, 200, 0.16));
       }
+      .ui-button:disabled { opacity: 0.6; cursor: wait; transform: none; }
       .ui-button .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
+        width: 10px; height: 10px; border-radius: 50%;
         background: linear-gradient(135deg, #ffe6b8, #d6a26d);
-        box-shadow:
-          0 0 10px rgba(255, 200, 140, 0.7),
-          inset 0 1px 0 rgba(255, 255, 255, 0.55);
+        box-shadow: 0 0 10px rgba(255, 200, 140, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.55);
         transition: background 0.22s ease, box-shadow 0.22s ease;
       }
       .ui-button[data-mode="night"] {
         color: #f0e6d0;
-        background: linear-gradient(135deg,
-          rgba(50, 60, 95, 0.4),
-          rgba(20, 28, 60, 0.22));
+        background: linear-gradient(135deg, rgba(50, 60, 95, 0.4), rgba(20, 28, 60, 0.22));
         border-color: rgba(180, 200, 235, 0.32);
         box-shadow:
           0 0 22px rgba(140, 170, 240, 0.28),
@@ -85,129 +88,602 @@
           inset 0 1px 0 rgba(220, 230, 255, 0.32);
       }
       .ui-button[data-mode="night"]:hover {
-        background: linear-gradient(135deg,
-          rgba(60, 75, 115, 0.5),
-          rgba(30, 40, 80, 0.3));
+        background: linear-gradient(135deg, rgba(60, 75, 115, 0.5), rgba(30, 40, 80, 0.3));
       }
       .ui-button[data-mode="night"] .dot {
         background: linear-gradient(135deg, #e2eaff, #a8b8e0);
-        box-shadow:
-          0 0 14px rgba(180, 200, 255, 0.7),
-          inset 0 1px 0 rgba(255, 255, 255, 0.55);
+        box-shadow: 0 0 14px rgba(180, 200, 255, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.55);
       }
 
-      .popup {
-        position: fixed;
-        pointer-events: none;
-        transform: translate(-50%, -100%);
-        z-index: 10;
-        transition: opacity 0.18s ease;
-        will-change: left, top, opacity;
+      #night-toggle { top: 18px; right: 18px; }
+      #gps-toggle   { top: 18px; right: 162px; }
+      #tour-toggle  { top: 18px; left: 50%; transform: translateX(-50%); }
+      #tour-toggle:hover { transform: translate(-50%, -1px); }
+      #tour-toggle[data-active="true"] {
+        background: linear-gradient(135deg, rgba(255, 140, 90, 0.4), rgba(255, 80, 50, 0.25));
+        border-color: rgba(255, 200, 170, 0.45);
+        color: #2a1408;
       }
-      .popup.hidden { display: none; }
+      #tour-toggle[data-active="true"] .dot {
+        background: linear-gradient(135deg, #fff, #ff5b2c);
+        box-shadow: 0 0 14px rgba(255, 100, 60, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      }
+      #gps-status   {
+        position: fixed; top: 60px; right: 18px;
+        font: 11px/1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        color: rgba(40, 30, 20, 0.85);
+        background: rgba(255, 250, 240, 0.4);
+        padding: 5px 10px; border-radius: 6px;
+        z-index: 5; pointer-events: none;
+      }
 
-      .popup-inner {
-        pointer-events: auto;
-        min-width: 240px;
-        max-width: 280px;
-        padding: 18px 20px 16px;
-        border-radius: 16px;
-        background: linear-gradient(135deg,
-          rgba(255, 250, 240, 0.18),
-          rgba(255, 230, 200, 0.08));
-        backdrop-filter: blur(18px) saturate(1.35);
-        -webkit-backdrop-filter: blur(18px) saturate(1.35);
+      /* Dev toolbar */
+      #dev-toolbar {
+        position: fixed; top: 18px; left: 18px;
+        z-index: 5; display: none;
+        flex-direction: column; gap: 8px; max-width: 320px;
+      }
+      body.dev-mode #dev-toolbar { display: flex; }
+      .toolbar-row {
+        display: flex; gap: 6px; align-items: center;
+        padding: 8px; border-radius: 12px;
+        background: linear-gradient(135deg, rgba(255, 250, 240, 0.2), rgba(255, 230, 200, 0.08));
+        backdrop-filter: blur(16px) saturate(1.3);
+        -webkit-backdrop-filter: blur(16px) saturate(1.3);
         border: 1px solid rgba(255, 255, 255, 0.32);
-        box-shadow:
-          0 0 32px rgba(255, 220, 170, 0.45),
-          0 0 72px rgba(255, 200, 140, 0.18),
-          0 14px 38px rgba(40, 25, 10, 0.32),
-          inset 0 1px 0 rgba(255, 255, 255, 0.5),
-          inset 0 -1px 0 rgba(255, 220, 180, 0.18),
-          inset 0 0 28px rgba(255, 235, 200, 0.12);
-        color: #2a1f12;
-        animation:
-          popup-appear 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both,
-          popup-float 4s ease-in-out 0.32s infinite;
+        box-shadow: 0 8px 24px rgba(40, 25, 10, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.5);
       }
-
-      @keyframes popup-appear {
-        from { opacity: 0; }
-        to   { opacity: 1; }
-      }
-      @keyframes popup-float {
-        0%, 100% { transform: translateY(0); }
-        50%      { transform: translateY(-5px); }
-      }
-
-      .popup-title {
-        font-size: 16px;
-        font-weight: 600;
-        margin: 0 0 6px;
-        letter-spacing: 0.01em;
-        color: #2a1a08;
-        text-shadow: 0 1px 0 rgba(255, 240, 215, 0.5);
-      }
-      .popup-desc {
-        font-size: 13px;
-        line-height: 1.5;
-        color: rgba(40, 30, 18, 0.82);
-        margin: 0 0 14px;
-      }
-      .popup-btn {
-        pointer-events: auto;
+      .mode-btn {
         appearance: none;
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        background: linear-gradient(135deg,
-          rgba(255, 210, 155, 0.42),
-          rgba(255, 180, 120, 0.22));
-        color: #2a1a08;
-        padding: 8px 14px;
-        border-radius: 9px;
-        font: 12.5px/1 inherit;
-        font-weight: 600;
+        padding: 7px 11px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.07);
+        color: #2a1f12;
+        font: 12px/1 inherit; font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease;
+      }
+      .mode-btn:hover { background: rgba(255, 255, 255, 0.15); }
+      .mode-btn.active {
+        background: linear-gradient(135deg, rgba(255, 210, 155, 0.55), rgba(255, 180, 120, 0.3));
+        border-color: rgba(255, 255, 255, 0.55);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      }
+      .toolbar-label {
+        font-size: 11px; color: rgba(40, 30, 18, 0.7);
+        letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+      }
+      #path-options select {
+        appearance: none;
+        background: rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #2a1f12; padding: 7px 10px; border-radius: 8px;
+        font: 12px/1 inherit; font-weight: 600; cursor: pointer;
+      }
+      #scale-slider {
+        flex: 1;
+        min-width: 140px;
+        appearance: none;
+        -webkit-appearance: none;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+      }
+      #scale-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        background: rgba(255, 210, 155, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.55);
+        border-radius: 50%;
+        cursor: grab;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+      }
+      #scale-slider::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        background: rgba(255, 210, 155, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.55);
+        border-radius: 50%;
+        cursor: grab;
+      }
+      #scale-input {
+        appearance: none;
+        width: 60px;
+        padding: 7px 8px;
+        background: rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        color: #2a1f12;
+        font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+        text-align: right;
+      }
+      #scale-reset {
+        appearance: none;
+        padding: 7px 10px; border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.12);
+        color: #2a1a08; font: 12px/1 inherit; font-weight: 600;
+        cursor: pointer;
+      }
+      #scale-reset:hover { background: rgba(255, 255, 255, 0.22); }
+
+      #path-finish, #path-cancel, #dev-simulate-gps, #dev-export, #dev-reset, #dev-toggle-clutter {
+        appearance: none;
+        padding: 7px 11px; border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.12);
+        color: #2a1a08; font: 12px/1 inherit; font-weight: 600; cursor: pointer;
+        transition: background 0.15s ease;
+      }
+      #path-finish:hover, #dev-simulate-gps:hover, #dev-export:hover, #dev-reset:hover, #dev-toggle-clutter:hover {
+        background: rgba(255, 255, 255, 0.22);
+      }
+      #path-finish {
+        background: linear-gradient(135deg, rgba(120, 210, 130, 0.4), rgba(60, 160, 80, 0.25));
+      }
+      #path-cancel { background: rgba(220, 120, 100, 0.22); }
+      #dev-reset   { background: rgba(220, 120, 100, 0.22); }
+      #dev-status {
+        font: 11px/1 inherit;
+        color: rgba(40, 30, 18, 0.78);
+        padding: 4px 8px;
+        align-self: flex-start;
+      }
+
+      /* Bottom card */
+      .bottom-card {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%);
+        z-index: 10;
+        pointer-events: auto;
+        width: min(640px, calc(100vw - 36px));
+        background: var(--te-bg);
+        border: 1px solid var(--te-border);
+        border-radius: 14px;
+        box-shadow: 0 14px 44px rgba(20, 12, 6, 0.22), 0 2px 6px rgba(20, 12, 6, 0.06);
+        color: var(--te-fg);
+        animation: bottom-card-up 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .bottom-card.hidden { display: none; }
+      @keyframes bottom-card-up {
+        from { opacity: 0; transform: translate(-50%, 22px); }
+        to   { opacity: 1; transform: translate(-50%, 0); }
+      }
+      .bottom-card-inner {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: center;
+        padding: 16px 18px;
+      }
+      .bottom-card-eyebrow {
+        font: 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        letter-spacing: 0.22em;
+        color: var(--te-muted);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .bottom-card-title {
+        font: 600 17px/1.2 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        color: var(--te-fg);
+        letter-spacing: -0.01em;
+        margin-bottom: 4px;
+      }
+      .bottom-card-stats {
+        font: 12.5px/1.4 -apple-system, system-ui, sans-serif;
+        color: #6a6a6a;
+      }
+      .bottom-card-btn {
+        appearance: none;
+        background: var(--te-accent);
+        color: #fff;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font: 600 13px/1 inherit;
         letter-spacing: 0.02em;
         cursor: pointer;
-        transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.55),
-          0 1px 2px rgba(40, 25, 10, 0.15);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.18s ease, transform 0.18s ease;
+        white-space: nowrap;
       }
-      .popup-btn:hover {
-        transform: translateY(-1px);
-        background: linear-gradient(135deg,
-          rgba(255, 210, 155, 0.65),
-          rgba(255, 180, 120, 0.4));
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.7),
-          0 4px 14px rgba(255, 180, 120, 0.4),
-          0 2px 6px rgba(40, 25, 10, 0.2);
+      .bottom-card-btn:hover { background: var(--te-accent-hover); transform: translateY(-1px); }
+      .bottom-card-btn .arrow { display: inline-block; transition: transform 0.18s ease; }
+      .bottom-card-btn:hover .arrow { transform: translateX(3px); }
+
+      /* ======================================================================
+         Modal — opaque, two-column with split left
+         left column   : 3D preview (top) + image gallery (bottom)
+         right column  : header + stats + scrollable description
+         tour bar      : sticks to bottom of modal-card when active
+         ====================================================================== */
+      .modal {
+        position: fixed; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        z-index: 20;
+        background: rgba(15, 10, 4, 0.55);
+        animation: modal-fade 0.22s ease;
       }
-      .popup-btn:active {
-        transform: translateY(0);
+      .modal.hidden { display: none; }
+      @keyframes modal-fade { from { opacity: 0; } to { opacity: 1; } }
+
+      .modal-card {
+        width: 88vw; height: 88vh;
+        max-width: 1500px;
+        background: var(--te-bg);
+        border: 1px solid var(--te-border);
+        border-radius: 18px;
+        box-shadow: 0 30px 90px rgba(15, 8, 0, 0.45);
+        color: var(--te-fg);
+        position: relative;
+        overflow: hidden;
+        animation: modal-appear 0.36s cubic-bezier(0.2, 0.8, 0.2, 1);
+        display: grid;
+        grid-template-rows: 1fr auto;
       }
-      .popup-btn .arrow {
-        display: inline-block;
-        transition: transform 0.18s ease;
-        margin-left: 4px;
+      @keyframes modal-appear {
+        from { transform: scale(0.96); opacity: 0; }
+        to   { transform: scale(1);    opacity: 1; }
       }
-      .popup-btn:hover .arrow { transform: translateX(3px); }
+
+      .modal-grid {
+        display: grid;
+        grid-template-columns: 5fr 6fr;
+        min-height: 0;
+      }
+
+      .modal-left {
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        border-right: 1px solid var(--te-border);
+        background: #efece2;
+        min-height: 0;
+      }
+      .modal-preview {
+        position: relative;
+        border-bottom: 1px solid var(--te-border);
+        min-height: 0;
+      }
+      #modal-preview-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .modal-gallery {
+        position: relative;
+        padding: 20px;
+        overflow-y: auto;
+        background: #f6f3e9;
+        min-height: 0;
+      }
+      .modal-gallery.is-empty {
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+      .modal-gallery-placeholder {
+        text-align: center;
+        color: var(--te-muted);
+        border: 1px dashed rgba(60, 50, 30, 0.22);
+        border-radius: 10px;
+        padding: 36px 24px;
+      }
+      .gallery-eyebrow {
+        font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #a09581;
+        margin-bottom: 8px;
+      }
+      .gallery-hint {
+        font: 13px/1.5 -apple-system, system-ui, sans-serif;
+        color: #5e5443;
+      }
+      .gallery-hint code {
+        background: rgba(0, 0, 0, 0.06);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-size: 12px;
+      }
+      .modal-gallery:not(.is-empty) {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+        align-content: start;
+      }
+      .modal-gallery-item {
+        aspect-ratio: 4 / 3;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #efece2;
+      }
+      .modal-gallery-item img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .modal-text {
+        padding: 52px 56px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        min-height: 0;
+        overflow-y: auto;
+      }
+      .modal-text::-webkit-scrollbar { width: 6px; }
+      .modal-text::-webkit-scrollbar-thumb { background: #d0cdc4; border-radius: 3px; }
+
+      .modal-eyebrow {
+        font: 11px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        letter-spacing: 0.22em;
+        color: var(--te-muted);
+        text-transform: uppercase;
+      }
+      .modal-title {
+        font: 600 34px/1.15 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        margin: 0;
+        letter-spacing: -0.015em;
+        color: var(--te-fg);
+      }
+
+      .modal-stats {
+        display: flex;
+        flex-direction: column;
+        padding: 14px 0;
+        border-top: 1px solid var(--te-border);
+        border-bottom: 1px solid var(--te-border);
+        gap: 2px;
+      }
+      .stat-row {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        font: 13px/1.6 -apple-system, system-ui, sans-serif;
+      }
+      .stat-label {
+        font: 600 11px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--te-muted);
+        align-self: center;
+      }
+      .stat-value { color: var(--te-fg); font-weight: 500; }
+
+      .modal-description {
+        font: 15px/1.7 -apple-system, system-ui, sans-serif;
+        color: #3a3a3a;
+        white-space: pre-line;
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 18px; right: 18px;
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--te-border);
+        color: var(--te-fg);
+        font: 18px/1 system-ui;
+        cursor: pointer;
+        transition: background 0.18s ease, transform 0.18s ease;
+        z-index: 3;
+      }
+      .modal-close:hover {
+        background: rgba(0, 0, 0, 0.1);
+        transform: rotate(90deg);
+      }
+
+      /* Tour bar — sits in the auto-row of the modal-card grid */
+      .modal-tour {
+        display: grid;
+        grid-template-columns: auto 1fr auto auto auto;
+        gap: 14px;
+        align-items: center;
+        padding: 14px 22px;
+        background: #1a1612;
+        color: #f3eedb;
+        font: 12px/1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        border-top: 1px solid rgba(255, 240, 200, 0.14);
+      }
+      .modal-tour[hidden] { display: none; }
+
+      .tour-info {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+      .tour-info-top {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        min-width: 0;
+      }
+      .tour-counter {
+        font: 600 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(243, 238, 219, 0.6);
+        white-space: nowrap;
+      }
+      .tour-stop-label {
+        font: 600 13px/1 inherit;
+        letter-spacing: -0.005em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .tour-progress-bar {
+        width: 100%;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .tour-progress-fill {
+        height: 100%;
+        background: var(--te-accent);
+        transition: width 0.1s linear;
+      }
+
+      .tour-prev, .tour-next, .tour-pause, .tour-exit, .tour-sound {
+        appearance: none;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 240, 200, 0.16);
+        color: #f3eedb;
+        padding: 9px 14px;
+        border-radius: 8px;
+        font: 600 12px/1 inherit;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: background 0.18s ease;
+        white-space: nowrap;
+      }
+      .tour-prev:hover, .tour-next:hover, .tour-pause:hover, .tour-sound:hover { background: rgba(255, 255, 255, 0.16); }
+      .tour-sound[data-muted="true"] { opacity: 0.6; }
+      .tour-sound:disabled { opacity: 0.3; cursor: not-allowed; }
+      .tour-prev:disabled { opacity: 0.35; cursor: not-allowed; }
+      .tour-next { background: var(--te-accent); border-color: var(--te-accent); }
+      .tour-next:hover { background: var(--te-accent-hover); border-color: var(--te-accent-hover); }
+      .tour-exit { background: rgba(220, 100, 80, 0.28); border-color: rgba(220, 120, 100, 0.32); }
+      .tour-exit:hover { background: rgba(220, 100, 80, 0.5); }
+
+      @media (max-width: 900px) {
+        .modal-grid {
+          grid-template-columns: 1fr;
+          grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+        }
+        .modal-left {
+          border-right: none;
+          border-bottom: 1px solid var(--te-border);
+        }
+        .modal-text { padding: 28px 26px; }
+        .modal-title { font-size: 24px; }
+        .stat-row { grid-template-columns: 100px 1fr; }
+        .modal-tour { padding: 12px 16px; gap: 8px; }
+      }
+
+      @media (max-width: 600px) {
+        .bottom-card-inner { grid-template-columns: 1fr; gap: 12px; }
+        .bottom-card-btn { width: 100%; justify-content: center; }
+      }
     </style>
   </head>
   <body>
     <div id="app"></div>
-    <div class="hint">drag to orbit · scroll to zoom · right-drag to pan · press F for cinematic flythrough · click a building</div>
+    <div id="loading" style="position:fixed;inset:0;display:grid;place-items:center;color:rgba(40,30,20,0.7);font:14px/1.4 -apple-system,system-ui,sans-serif;letter-spacing:0.05em;background:#f4d2a5;z-index:30;pointer-events:none;">Loading campus…</div>
+    <div class="hint">drag to orbit · scroll to zoom · right-drag or WASD to pan · F flythrough · click a building</div>
+
+    <div id="dev-toolbar">
+      <div class="toolbar-row">
+        <span class="toolbar-label">Tool</span>
+        <button class="mode-btn active" data-mode="buildings" type="button">Buildings</button>
+        <button class="mode-btn" data-mode="draw-path" type="button">Draw path</button>
+        <button class="mode-btn" data-mode="edit-zones" type="button">Edit zones</button>
+      </div>
+      <div class="toolbar-row" id="path-options" hidden>
+        <span class="toolbar-label">Type</span>
+        <select id="path-type">
+          <option value="pedestrian">Pedestrian</option>
+          <option value="cycle">Cycle path</option>
+          <option value="service">Service road</option>
+          <option value="road">Road</option>
+        </select>
+        <button id="path-finish" type="button">Save (Enter)</button>
+        <button id="path-cancel" type="button">Cancel (Esc)</button>
+      </div>
+      <div class="toolbar-row" id="scale-row" hidden>
+        <span class="toolbar-label">Scale</span>
+        <input type="range" id="scale-slider" min="0" max="100" step="0.5" value="50" />
+        <input type="number" id="scale-input" min="0.01" max="100" step="0.01" />
+        <button id="scale-reset" type="button">Auto</button>
+      </div>
+      <div class="toolbar-row">
+        <button id="dev-toggle-clutter" type="button">Show clutter</button>
+        <button id="dev-simulate-gps" type="button">Simulate GPS</button>
+        <button id="dev-export" type="button">Export all</button>
+        <button id="dev-reset" type="button">Reset all</button>
+      </div>
+      <div id="dev-status"></div>
+    </div>
+
+    <button id="tour-toggle" class="ui-button" type="button">
+      <span class="dot"></span>
+      <span class="label">Start tour</span>
+    </button>
+
+    <button id="gps-toggle" class="ui-button" type="button">
+      <span class="dot" style="background: linear-gradient(135deg, #99d6ff, #2a7ec7);"></span>
+      <span class="label">Use my location</span>
+    </button>
+    <div id="gps-status"></div>
 
     <button id="night-toggle" class="ui-button" type="button" data-mode="day">
       <span class="dot"></span>
       <span class="label">Night mode</span>
     </button>
 
-    <div id="popup" class="popup hidden">
-      <div class="popup-inner">
-        <div class="popup-title">Building</div>
-        <div class="popup-desc">Description.</div>
-        <button class="popup-btn" type="button">Read more <span class="arrow">→</span></button>
+    <div id="popup" class="bottom-card hidden">
+      <div class="bottom-card-inner">
+        <div class="bottom-card-text">
+          <div class="bottom-card-eyebrow">Facility</div>
+          <div class="bottom-card-title">Building</div>
+          <div class="bottom-card-stats">Description</div>
+        </div>
+        <button class="bottom-card-btn" type="button">
+          Read more <span class="arrow">→</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="building-modal" class="modal hidden">
+      <div class="modal-card">
+        <button class="modal-close" type="button" aria-label="Close">×</button>
+        <div class="modal-grid">
+          <div class="modal-left">
+            <div class="modal-preview">
+              <canvas id="modal-preview-canvas"></canvas>
+            </div>
+            <div class="modal-gallery is-empty">
+              <div class="modal-gallery-placeholder">
+                <div class="gallery-eyebrow">Image gallery</div>
+                <div class="gallery-hint">add via <code>gallery: [...]</code> in building-details.js</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-text">
+            <div class="modal-eyebrow">Campus · facility</div>
+            <h2 class="modal-title">Building</h2>
+            <div class="modal-stats">
+              <div class="stat-row"><span class="stat-label">Area</span><span class="stat-value stat-area">—</span></div>
+              <div class="stat-row"><span class="stat-label">Perimeter</span><span class="stat-value stat-perimeter">—</span></div>
+            </div>
+            <div class="modal-description">Full description will appear here.</div>
+          </div>
+        </div>
+        <div class="modal-tour" hidden>
+          <button class="tour-prev" type="button" aria-label="Previous stop">← Prev</button>
+          <div class="tour-info">
+            <div class="tour-info-top">
+              <span class="tour-counter">Stop 1 of 8</span>
+              <span class="tour-stop-label">Building name</span>
+            </div>
+            <div class="tour-progress-bar"><div class="tour-progress-fill"></div></div>
+          </div>
+          <button class="tour-sound" type="button" data-muted="false">Sound on</button>
+          <button class="tour-pause" type="button">Pause</button>
+          <button class="tour-next" type="button">Next →</button>
+          <button class="tour-exit" type="button">Exit</button>
+        </div>
       </div>
     </div>
 

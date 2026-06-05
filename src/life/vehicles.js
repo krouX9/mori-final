@@ -6,7 +6,10 @@ export function createVehiclesSystem(layout, sampleHeight, rng) {
   const group = new THREE.Group();
   group.name = 'vehicles';
 
-  const perim = layout.roads.slice(0, 4);
+  const perim = (layout.roads || []).slice(0, 4);
+  if (perim.length === 0) {
+    return { group, update: () => {} };
+  }
   let totalLen = 0;
   const segMeta = perim.map((seg) => {
     const len = Math.hypot(seg.b.x - seg.a.x, seg.b.y - seg.a.y);
@@ -54,7 +57,7 @@ export function createVehiclesSystem(layout, sampleHeight, rng) {
         v.mesh.position.set(cx, sampleHeight(cx, cz) + 0.05, cz);
         v.mesh.rotation.y = -Math.atan2(dz, dx);
 
-        const spin = (v.speed * dt) / 0.24;
+        const spin = (v.speed * dt) / 0.34;
         for (const w of v.wheels) w.rotation.z -= spin;
       }
     },
@@ -75,29 +78,29 @@ function makeCar(rng) {
   const cabinColor = color.clone().multiplyScalar(0.65);
 
   const body = new THREE.Mesh(
-    new THREE.BoxGeometry(2.4, 0.7, 1.1),
+    new THREE.BoxGeometry(4.4, 1.0, 1.8),
     new THREE.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.2 }),
   );
-  body.position.y = 0.55;
+  body.position.y = 0.85;
   body.castShadow = true;
   group.add(body);
 
   const cabin = new THREE.Mesh(
-    new THREE.BoxGeometry(1.3, 0.55, 1.0),
+    new THREE.BoxGeometry(2.4, 0.85, 1.65),
     new THREE.MeshStandardMaterial({ color: cabinColor, roughness: 0.3, metalness: 0.3 }),
   );
-  cabin.position.set(-0.15, 1.18, 0);
+  cabin.position.set(-0.2, 1.78, 0);
   cabin.castShadow = true;
   group.add(cabin);
 
   const wheelMat = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.95 });
-  const wheelGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.18, 10);
+  const wheelGeo = new THREE.CylinderGeometry(0.34, 0.34, 0.28, 14);
   wheelGeo.rotateX(Math.PI / 2);
 
   const wheels = [];
-  for (const [x, z] of [[-0.8, 0.55], [-0.8, -0.55], [0.8, 0.55], [0.8, -0.55]]) {
+  for (const [x, z] of [[-1.4, 0.85], [-1.4, -0.85], [1.4, 0.85], [1.4, -0.85]]) {
     const w = new THREE.Mesh(wheelGeo, wheelMat);
-    w.position.set(x, 0.24, z);
+    w.position.set(x, 0.34, z);
     w.castShadow = true;
     wheels.push(w);
     group.add(w);

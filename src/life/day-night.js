@@ -34,8 +34,10 @@ export class DayNightSystem {
       hemiSkyColor: lights.hemi.color.clone(),
       hemiGroundColor: lights.hemi.groundColor.clone(),
       ambientColor: lights.ambient.color.clone(),
-      fogColor: scene.fog.color.clone(),
-      bgColor: scene.background.clone(),
+      // Fog may be null now that atmosphere.js disables volumetric fog in
+      // favour of the terrain horizon-blend. Capture it only if present.
+      fogColor: scene.fog ? scene.fog.color.clone() : null,
+      bgColor: scene.background?.isColor ? scene.background.clone() : null,
       bulbEmissive: lamps[0]?.userData?.bulbMesh?.material?.emissiveIntensity ?? 1.4,
     };
 
@@ -74,8 +76,8 @@ export class DayNightSystem {
       this.lights.hemi.groundColor.copy(NIGHT.hemiGround);
       this.lights.ambient.intensity = NIGHT.ambientIntensity;
       this.lights.ambient.color.copy(NIGHT.ambient);
-      this.scene.fog.color.copy(NIGHT.fog);
-      this.scene.background.copy(NIGHT.bg);
+      if (this.scene.fog) this.scene.fog.color.copy(NIGHT.fog);
+      if (this.scene.background?.isColor) this.scene.background.copy(NIGHT.bg);
 
       if (this.skydome) {
         this.skydome.material.vertexColors = false;
@@ -104,8 +106,8 @@ export class DayNightSystem {
       this.lights.hemi.groundColor.copy(this.day.hemiGroundColor);
       this.lights.ambient.intensity = this.day.ambientIntensity;
       this.lights.ambient.color.copy(this.day.ambientColor);
-      this.scene.fog.color.copy(this.day.fogColor);
-      this.scene.background.copy(this.day.bgColor);
+      if (this.scene.fog && this.day.fogColor) this.scene.fog.color.copy(this.day.fogColor);
+      if (this.scene.background?.isColor && this.day.bgColor) this.scene.background.copy(this.day.bgColor);
 
       if (this.skydome) {
         this.skydome.material.vertexColors = true;

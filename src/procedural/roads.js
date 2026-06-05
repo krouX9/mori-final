@@ -14,21 +14,26 @@ export function buildRoadsAndPaths(layout, sampleHeight) {
     roughness: 0.9,
   });
 
-  const quad = layout.quad;
-  const quadGeo = new THREE.CircleGeometry(quad.r, 48);
-  quadGeo.rotateX(-Math.PI / 2);
-  const quadMesh = new THREE.Mesh(quadGeo, pathMat);
-  quadMesh.position.set(quad.x, sampleHeight(quad.x, quad.z) + 0.04, quad.z);
-  quadMesh.receiveShadow = true;
-  group.add(quadMesh);
-
   for (const w of layout.walkways) {
-    const seg = makeSegment(w.a, w.b, w.width, pathMat, sampleHeight, 0.05);
+    const seg = makeSegment(w.a, w.b, w.width, pathMat, sampleHeight, 0.08);
     if (seg) group.add(seg);
   }
   for (const r of layout.roads) {
-    const seg = makeSegment(r.a, r.b, r.width, roadMat, sampleHeight, 0.06);
+    const seg = makeSegment(r.a, r.b, r.width, roadMat, sampleHeight, 0.1);
     if (seg) group.add(seg);
+  }
+  if (layout.plazas) {
+    for (const p of layout.plazas) {
+      if (p.r < 0.1) continue;
+      const disc = new THREE.Mesh(
+        new THREE.CircleGeometry(p.r, 32),
+        pathMat,
+      );
+      disc.rotation.x = -Math.PI / 2;
+      disc.position.set(p.x, sampleHeight(p.x, p.z) + 0.07, p.z);
+      disc.receiveShadow = true;
+      group.add(disc);
+    }
   }
   return group;
 }

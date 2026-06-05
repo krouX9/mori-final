@@ -6,14 +6,17 @@ const matCache = new Map();
 function mat(color, opts = {}) {
   const key = color.getHexString() + '|' + (opts.roughness ?? 0.9) + '|' + (opts.metalness ?? 0) + '|' + (opts.flatShading ?? false) + '|' + (opts.emissive?.getHexString() ?? '') + '|' + (opts.emissiveIntensity ?? 0);
   if (matCache.has(key)) return matCache.get(key);
-  const m = new THREE.MeshStandardMaterial({
+  // Only pass `emissive` when it's actually defined — Three.js whines about
+  // `parameter 'emissive' has value of undefined` otherwise.
+  const params = {
     color,
     roughness: opts.roughness ?? 0.9,
     metalness: opts.metalness ?? 0.0,
     flatShading: opts.flatShading ?? false,
-    emissive: opts.emissive,
     emissiveIntensity: opts.emissiveIntensity ?? 0,
-  });
+  };
+  if (opts.emissive !== undefined) params.emissive = opts.emissive;
+  const m = new THREE.MeshStandardMaterial(params);
   matCache.set(key, m);
   return m;
 }
@@ -76,9 +79,10 @@ export function makeLamp() {
   const group = new THREE.Group();
   const metalMat = mat(P.metal);
 
+  // Small props don't cast shadows — too thin to read at distance and they
+  // double the shadow-pass draw count.
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 4.2, 8), metalMat);
   pole.position.y = 2.1;
-  pole.castShadow = true;
   group.add(pole);
 
   const arm = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.08, 0.08), metalMat);
@@ -87,7 +91,6 @@ export function makeLamp() {
 
   const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.5), metalMat);
   head.position.set(0.55, 3.95, 0);
-  head.castShadow = true;
   group.add(head);
 
   const bulb = new THREE.Mesh(
@@ -113,19 +116,19 @@ export function makeBench() {
 
   const seat = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.12, 0.6), wood);
   seat.position.y = 0.55;
-  seat.castShadow = true;
+  seat.castShadow = false;
   seat.receiveShadow = true;
   group.add(seat);
 
   const back = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.55, 0.1), wood);
   back.position.set(0, 0.85, -0.25);
-  back.castShadow = true;
+  back.castShadow = false;
   group.add(back);
 
   for (const x of [-1.0, 1.0]) {
     const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.55, 0.5), metalMat);
     leg.position.set(x, 0.27, 0);
-    leg.castShadow = true;
+    leg.castShadow = false;
     group.add(leg);
   }
 
@@ -137,7 +140,6 @@ export function makePole() {
   const group = new THREE.Group();
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 3.2, 6), mat(P.metal));
   pole.position.y = 1.6;
-  pole.castShadow = true;
   group.add(pole);
   group.userData.kind = 'pole';
   return group;
@@ -150,13 +152,11 @@ export function makeSign(rng = Math.random) {
     mat(new THREE.Color('#4a3a2c')),
   );
   post.position.y = 1.2;
-  post.castShadow = true;
   group.add(post);
 
   const boardColor = pick(rng, [P.path, new THREE.Color('#cdb787'), new THREE.Color('#a98a5e')]);
   const board = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 0.06), mat(boardColor));
   board.position.set(0, 2.1, 0);
-  board.castShadow = true;
   group.add(board);
 
   group.userData.kind = 'sign';

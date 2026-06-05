@@ -4,12 +4,21 @@ export const CONFIG = {
   seed: 1337,
 
   world: {
-    terrainSize: 2000,
-    terrainSegments: 192,
-    campusRadius: 110,
-    outerFadeStart: 230,
+    terrainSize: 2400,
+    terrainSegments: 200,
+    campusRadius: 170,
+    outerFadeStart: 300,
   },
 
+  // ------------------------------------------------------------------------
+  // Palette
+  //   Edit any colour to retune the scene. These flow into:
+  //     • the hemisphere/ambient/sun lights (skyTop, skyHorizon, sun)
+  //     • the skydome gradient (skyTop → skyHorizon)
+  //     • the terrain vertex colours (grass, grassDry, soil, skyHorizon
+  //       blend at the horizon — no fog any more, see terrain.js).
+  //   For overall warm/cool feel, change skyTop + skyHorizon + sun.
+  // ------------------------------------------------------------------------
   palette: {
     skyTop: new THREE.Color('#e9d8b4'),
     skyHorizon: new THREE.Color('#f3cda1'),
@@ -42,16 +51,45 @@ export const CONFIG = {
   },
 
   life: {
-    birdCount: 12,
-    walkerCount: 18,
-    vehicleCount: 6,
+    birdCount: 20,
+    walkerCount: 0,
+    vehicleCount: 0,
   },
+
+  // ------------------------------------------------------------------------
+  // Texture paths (relative to Vite base — drop files in public/textures/).
+  //   The terrain and each zone type try to load these on init. If a file
+  //   is missing, the load fails silently and we fall back to the vertex
+  //   colour / flat colour that was rendering before.
+  //
+  //   Recommended files (seamless tileable JPGs, 512–1024 px):
+  //     public/textures/grass.jpg       — terrain ground tint
+  //     public/textures/garden.jpg      — Garden zone
+  //     public/textures/playground.jpg  — Playground zone
+  //     public/textures/assembly.jpg    — Assembly zone
+  //
+  //   Adjust the `repeat` values to control how many tiles fit across the
+  //   surface (higher = more tiling = finer detail).
+  // ------------------------------------------------------------------------
+  textures: {
+    grass:          { url: 'textures/grass.jpg',      repeat: 60 },
+    garden:         { url: 'textures/garden.jpg',     repeat: 8  },
+    playground:     { url: 'textures/playground.jpg', repeat: 6  },
+    assembly:       { url: 'textures/assembly.jpg',   repeat: 4  },
+    // Path textures — drop files at the same place and they'll tile.
+    pedestrianPath: { url: 'textures/pedestrian.jpg', repeat: 1.6 },
+    roadPath:       { url: 'textures/road.jpg',       repeat: 4   },
+  },
+
+  // Solid colour for terrain OUTSIDE the boundary wall. No texture is applied
+  // there — it's a flat tint so the campus sits on a clean coloured field.
+  outsideColor: new THREE.Color('#9d8eb8'),
 
   lighting: {
     sunIntensity: 2.6,
     ambientIntensity: 0.35,
     hemiSkyIntensity: 0.6,
-    sunPosition: new THREE.Vector3(120, 95, 60),
+    sunPosition: new THREE.Vector3(180, 140, 90),
   },
 
   bloom: {
@@ -63,30 +101,25 @@ export const CONFIG = {
   camera: {
     fov: 38,
     near: 1,
-    far: 1500,
-    initialPosition: new THREE.Vector3(150, 95, 175),
+    far: 1800,
+    initialPosition: new THREE.Vector3(220, 150, 260),
     target: new THREE.Vector3(0, 4, 0),
     minDistance: 40,
-    maxDistance: 360,
+    maxDistance: 520,
     minPolar: 0.15,
     maxPolar: Math.PI * 0.46,
     damping: 0.075,
   },
 
   vegetation: {
-    treeCount: 200,
-    shrubCount: 320,
-    grassPatchCount: 2400,
+    treeCount: 120,
+    shrubCount: 180,
   },
 
   props: {
-    lampSpacing: 16,
+    lampSpacing: 18,
     benchCount: 14,
-    signCount: 8,
+    signCount: 10,
     poleCount: 22,
-  },
-
-  buildings: {
-    lots: 7,
   },
 };

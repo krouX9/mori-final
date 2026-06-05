@@ -2,8 +2,13 @@ import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 
 export function setupAtmosphere(scene) {
-  scene.background = CONFIG.palette.fog.clone();
-  scene.fog = new THREE.FogExp2(CONFIG.palette.fog, CONFIG.fog.density);
+  // Background colour shows behind the skydome at extreme angles and is the
+  // same as the horizon colour so any sliver between dome + terrain reads
+  // as sky.
+  scene.background = CONFIG.palette.skyHorizon.clone();
+  // No volumetric fog — depth fade is done in vertex colours on the terrain
+  // (see terrain.js) which blends the ground toward skyHorizon at distance.
+  scene.fog = null;
   scene.add(createSkydome());
 }
 

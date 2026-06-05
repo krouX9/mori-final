@@ -25,6 +25,21 @@ export function createCamera(renderer) {
   controls.rotateSpeed = 0.65;
   controls.zoomSpeed = 0.85;
   controls.panSpeed = 0.6;
+  // Keyboard pan: WASD drives the camera across the ground plane (because
+  // screenSpacePanning is false above). Arrow keys still work too — both
+  // produce key codes OrbitControls listens for. listenToKeyEvents fires
+  // off `window`, but OrbitControls internally checks `enabled` first, so
+  // when the modal is open or the user is dragging a TransformControls
+  // handle, WASD goes inert automatically.
+  controls.keys = {
+    LEFT:   'KeyA',
+    UP:     'KeyW',
+    RIGHT:  'KeyD',
+    BOTTOM: 'KeyS',
+  };
+  controls.keyPanSpeed = 18;
+  controls.listenToKeyEvents(window);
+
   controls.update();
 
   return { camera, controls };
