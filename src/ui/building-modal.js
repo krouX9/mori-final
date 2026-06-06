@@ -1,10 +1,14 @@
 import { ModalPreview } from './modal-preview.js';
 
 export class BuildingModal {
-  constructor(controls) {
+  constructor(controls, app) {
     this.controls = controls;
+    this.app = app;
     this.el = document.getElementById('building-modal');
     if (!this.el) return;
+    this.mobile = window.matchMedia('(max-width: 768px)').matches;
+    this.expanded = false;
+    if (this.mobile) this.el.classList.add('is-mobile');
     this.titleEl    = this.el.querySelector('.modal-title');
     this.eyebrowEl  = this.el.querySelector('.modal-eyebrow');
     this.descEl     = this.el.querySelector('.modal-description');
@@ -18,7 +22,19 @@ export class BuildingModal {
     this.onHide = null;
     this.progressRaf = null;
 
-    this.closeBtn?.addEventListener('click', () => this.hide());
+    this.closeBtn?.addEventListener('click', () => {
+      this.hide();
+      // Pull camera back so the user can resume exploring the campus.
+      this.app?.setTarget?.(null);
+      this.app?.zoomToOverview?.();
+    });
+    // Mobile "Expand for full reading" button.
+    const expandBtn = this.el.querySelector('.modal-expand');
+    expandBtn?.addEventListener('click', () => {
+      this.expanded = !this.expanded;
+      this.el.classList.toggle('is-expanded', this.expanded);
+      expandBtn.textContent = this.expanded ? 'Collapse' : 'Swipe up · expand';
+    });
     this.el.addEventListener('click', (e) => {
       if (e.target === this.el) this.hide();
     });
@@ -52,10 +68,20 @@ export class BuildingModal {
       this.prevControlsEnabled = this.controls.enabled;
       this.controls.enabled = false;
     }
-    if (this.preview) this.preview.show(building);
+    // Skip the in-modal 3D preview during tour (the actual building in the
+    // campus is the preview now — focused, floating, lit on the left half
+    // of the viewport) AND on mobile.
+    const skipPreview = opts.tour || this.mobile;
+    if (this.preview && !skipPreview) this.preview.show(building);
+    else if (this.preview) this.preview.clear();
 
-    if (opts.tour) this.showTourControls(opts.tour);
-    else this.hideTourControls();
+    if (opts.tour) {
+      this.showTourControls(opts.tour);
+      this.el.classList.add('is-tour');
+    } else {
+      this.hideTourControls();
+      this.el.classList.remove('is-tour');
+    }
   }
 
   renderGallery(info) {
@@ -151,6 +177,7 @@ export class BuildingModal {
 
   hide() {
     this.el?.classList.add('hidden');
+    this.el?.classList.remove('is-tour');
     if (this.controls) this.controls.enabled = this.prevControlsEnabled ?? true;
     if (this.preview) this.preview.clear();
     this.hideTourControls();

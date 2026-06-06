@@ -72,12 +72,10 @@ export const CONFIG = {
   //   surface (higher = more tiling = finer detail).
   // ------------------------------------------------------------------------
   textures: {
-    grass:          { url: 'textures/grass.jpg',      repeat: 60 },
     garden:         { url: 'textures/garden.jpg',     repeat: 8  },
     playground:     { url: 'textures/playground.jpg', repeat: 6  },
     assembly:       { url: 'textures/assembly.jpg',   repeat: 4  },
     // Path textures — drop files at the same place and they'll tile.
-    pedestrianPath: { url: 'textures/pedestrian.jpg', repeat: 1.6 },
     roadPath:       { url: 'textures/road.jpg',       repeat: 4   },
   },
 

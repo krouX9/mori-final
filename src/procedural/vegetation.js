@@ -17,17 +17,17 @@ export function placeVegetation(layout, sampleHeight, rng) {
   return { group, trees, shrubs };
 }
 
-// True when (x, z) is inside the boundary wall (same rectangle the wall is
-// built from in layout.js, with the same padding). Vegetation is rejected
-// outside this so the violet "outside" area stays clean.
-const WALL_PADDING = 40;
-function isInsideWall(x, z, bounds) {
+// Vegetation is allowed inside the wall AND in a generous skirt around it
+// — fog hides whatever drifts far, so a soft halo of trees outside the
+// campus reads as natural countryside.
+const VEG_PADDING = 140;
+function isInVegRange(x, z, bounds) {
   if (!bounds || !Number.isFinite(bounds.minX)) return true;
   return (
-    x > bounds.minX - WALL_PADDING &&
-    x < bounds.maxX + WALL_PADDING &&
-    z > bounds.minZ - WALL_PADDING &&
-    z < bounds.maxZ + WALL_PADDING
+    x > bounds.minX - VEG_PADDING &&
+    x < bounds.maxX + VEG_PADDING &&
+    z > bounds.minZ - VEG_PADDING &&
+    z < bounds.maxZ + VEG_PADDING
   );
 }
 
@@ -47,7 +47,7 @@ function placeTrees(layout, sampleHeight, rng) {
     const a = rng() * Math.PI * 2;
     const x = Math.cos(a) * r;
     const z = Math.sin(a) * r;
-    if (!isInsideWall(x, z, layout.bounds)) continue;
+    if (!isInVegRange(x, z, layout.bounds)) continue;
     const dist = Math.hypot(x, z);
 
     const ringDensity = Math.exp(-((dist - ringCenter) ** 2) / (ringWidth * ringWidth));
@@ -78,7 +78,7 @@ function placeShrubs(layout, sampleHeight, rng) {
     const a = rng() * Math.PI * 2;
     const x = Math.cos(a) * r;
     const z = Math.sin(a) * r;
-    if (!isInsideWall(x, z, layout.bounds)) continue;
+    if (!isInVegRange(x, z, layout.bounds)) continue;
     if (isOccupied(layout, x, z, 1.5)) continue;
     const sh = createProp('shrub', rng);
     sh.position.set(x, sampleHeight(x, z), z);

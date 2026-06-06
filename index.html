@@ -211,6 +211,16 @@
       }
       #scale-reset:hover { background: rgba(255, 255, 255, 0.22); }
 
+      #zone-options select, #zone-finish, #zone-cancel {
+        appearance: none;
+        padding: 7px 11px; border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.12);
+        color: #2a1a08; font: 12px/1 inherit; font-weight: 600; cursor: pointer;
+      }
+      #zone-finish { background: linear-gradient(135deg, rgba(120, 210, 130, 0.4), rgba(60, 160, 80, 0.25)); }
+      #zone-cancel { background: rgba(220, 120, 100, 0.22); }
+
       #path-finish, #path-cancel, #dev-simulate-gps, #dev-export, #dev-reset, #dev-toggle-clutter {
         appearance: none;
         padding: 7px 11px; border-radius: 8px;
@@ -572,6 +582,216 @@
         .modal-tour { padding: 12px 16px; gap: 8px; }
       }
 
+      /* ---- Mobile floating dock — only shown on small viewports ---- */
+      .mobile-dock {
+        display: none;
+        position: fixed;
+        bottom: 22px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 12;
+        background: rgba(255, 250, 240, 0.92);
+        backdrop-filter: blur(14px) saturate(1.2);
+        -webkit-backdrop-filter: blur(14px) saturate(1.2);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 999px;
+        padding: 4px;
+        gap: 2px;
+        box-shadow:
+          0 12px 32px rgba(20, 12, 6, 0.28),
+          0 2px 6px rgba(20, 12, 6, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      }
+      .mobile-dock-btn {
+        appearance: none;
+        border: none;
+        background: transparent;
+        padding: 12px 22px;
+        border-radius: 999px;
+        font: 600 13px/1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        letter-spacing: 0.04em;
+        color: #2a1a08;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+        white-space: nowrap;
+      }
+      .mobile-dock-btn:hover { background: rgba(255, 90, 50, 0.1); }
+      .mobile-dock-btn.active {
+        background: var(--te-accent);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(255, 90, 50, 0.32);
+      }
+
+      @media (max-width: 768px) {
+        .mobile-dock { display: inline-flex; }
+        /* hide the desktop top-bar buttons; the dock replaces them */
+        #night-toggle, #gps-toggle, #gps-status, #tour-toggle { display: none; }
+        .hint { display: none; }
+
+        /* Lift the building "Read more" card above the floating dock so they
+           don't overlap. */
+        .bottom-card { bottom: 96px; }
+
+        /* ---- Mobile tour: undo the desktop right-side split ----
+           On mobile we want the tour card at the bottom 50%, the campus
+           filling the top, and the focused building centered up there. The
+           .is-tour rule below (desktop) sets a 50vw right-side panel; this
+           combined rule wins because of specificity (.is-mobile.is-tour
+           beats .is-tour). */
+        .modal.is-mobile.is-tour {
+          align-items: flex-end;
+          justify-content: center;
+          background: transparent;
+          pointer-events: none;
+        }
+        .modal.is-mobile.is-tour .modal-card {
+          pointer-events: auto;
+          width: 100vw;
+          height: 50vh;
+          max-width: none;
+          border-radius: 18px 18px 0 0;
+          animation: tour-slide-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+          grid-template-rows: 1fr auto;
+        }
+        @keyframes tour-slide-up {
+          from { transform: translateY(100%); }
+          to   { transform: translateY(0); }
+        }
+        .modal.is-mobile.is-tour .modal-text { padding: 26px 22px 16px; }
+        .modal.is-mobile.is-tour .modal-title { font-size: 20px; }
+
+        /* Mobile tour bar — restructure as a stacked layout that always
+           fits in two clean rows: info on top, action buttons below. */
+        .modal.is-mobile .modal-tour {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          padding: 10px 12px env(safe-area-inset-bottom, 10px);
+        }
+        .modal.is-mobile .tour-info {
+          order: -1;
+          flex: 1 1 100%;
+        }
+        .modal.is-mobile .tour-counter   { font-size: 9px; }
+        .modal.is-mobile .tour-stop-label { font-size: 12px; }
+        .modal.is-mobile .tour-prev,
+        .modal.is-mobile .tour-pause,
+        .modal.is-mobile .tour-sound,
+        .modal.is-mobile .tour-next,
+        .modal.is-mobile .tour-exit {
+          flex: 1 1 0;
+          min-width: 0;
+          padding: 9px 6px;
+          font-size: 11.5px;
+          letter-spacing: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        /* Primary buttons readable, secondary keep tighter sizing. */
+        .modal.is-mobile .tour-next { flex: 1.4 1 0; }
+        .modal.is-mobile .tour-exit { flex: 0.7 1 0; }
+        .modal.is-mobile .tour-sound { flex: 0.9 1 0; }
+      }
+
+      /* ---- Tour split-screen mode ----
+         Right half is the modal, left half is the live campus with the
+         focused building hovering. modal.is-tour overrides the default
+         centered modal layout. */
+      .modal.is-tour {
+        align-items: stretch;
+        justify-content: flex-end;
+        background: transparent;       /* let the campus show through */
+        pointer-events: none;          /* clicks pass through to canvas */
+      }
+      .modal.is-tour .modal-card {
+        pointer-events: auto;
+        width: 50vw;
+        height: 100vh;
+        max-width: none;
+        border-radius: 18px 0 0 18px;
+        grid-template-rows: 1fr auto;
+        animation: tour-slide-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      @keyframes tour-slide-in {
+        from { transform: translateX(100%); }
+        to   { transform: translateX(0); }
+      }
+      .modal.is-tour .modal-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr;
+      }
+      .modal.is-tour .modal-left { display: none; }
+      .modal.is-tour .modal-text {
+        padding: 56px 56px 32px;
+      }
+      .modal.is-tour .modal-close { top: 22px; right: 22px; }
+
+      /* ---- Mobile peek card ---- */
+      .modal-expand { display: none; }
+      .modal.is-mobile {
+        align-items: flex-end;
+        background: transparent;        /* let user see the campus above */
+        pointer-events: none;
+      }
+      .modal.is-mobile .modal-card {
+        pointer-events: auto;
+        width: 100vw;
+        height: 50vh;
+        max-width: none;
+        border-radius: 18px 18px 0 0;
+        box-shadow: 0 -20px 60px rgba(15, 8, 0, 0.45);
+        transition: height 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+        grid-template-rows: 1fr;
+      }
+      .modal.is-mobile.is-expanded .modal-card { height: 92vh; }
+      .modal.is-mobile .modal-left { display: none; }
+      .modal.is-mobile .modal-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr;
+      }
+      .modal.is-mobile .modal-text {
+        padding: 22px 22px 96px;
+        position: relative;
+      }
+      .modal.is-mobile .modal-expand {
+        display: block;
+        position: fixed;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        appearance: none;
+        background: rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--te-border);
+        color: var(--te-fg);
+        padding: 8px 16px;
+        border-radius: 999px;
+        font: 600 12px/1 ui-monospace, monospace;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+      .modal.is-mobile .modal-title { font-size: 22px; }
+      .modal.is-mobile .modal-close {
+        top: 14px;
+        right: 14px;
+      }
+      /* Subtle "drag handle" so users intuit the card */
+      .modal.is-mobile .modal-card::before {
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(0, 0, 0, 0.18);
+      }
+      .modal.is-mobile .modal-tour {
+        padding: 10px 14px;
+      }
+
       @media (max-width: 600px) {
         .bottom-card-inner { grid-template-columns: 1fr; gap: 12px; }
         .bottom-card-btn { width: 100%; justify-content: center; }
@@ -580,7 +800,7 @@
   </head>
   <body>
     <div id="app"></div>
-    <div id="loading" style="position:fixed;inset:0;display:grid;place-items:center;color:rgba(40,30,20,0.7);font:14px/1.4 -apple-system,system-ui,sans-serif;letter-spacing:0.05em;background:#f4d2a5;z-index:30;pointer-events:none;">Loading campus…</div>
+    <div id="loading" style="position:fixed;inset:0;display:grid;place-items:center;color:rgba(40,30,20,0.78);font:600 18px/1.4 -apple-system,system-ui,sans-serif;letter-spacing:0.05em;background:#f4d2a5;z-index:30;pointer-events:none;text-align:center;padding:0 24px;">Welcome to Project India Compassion Trust</div>
     <div class="hint">drag to orbit · scroll to zoom · right-drag or WASD to pan · F flythrough · click a building</div>
 
     <div id="dev-toolbar">
@@ -588,7 +808,18 @@
         <span class="toolbar-label">Tool</span>
         <button class="mode-btn active" data-mode="buildings" type="button">Buildings</button>
         <button class="mode-btn" data-mode="draw-path" type="button">Draw path</button>
+        <button class="mode-btn" data-mode="draw-zone" type="button">Draw zone</button>
         <button class="mode-btn" data-mode="edit-zones" type="button">Edit zones</button>
+      </div>
+      <div class="toolbar-row" id="zone-options" hidden>
+        <span class="toolbar-label">Type</span>
+        <select id="zone-type">
+          <option value="garden">Garden</option>
+          <option value="playground">Playground</option>
+          <option value="assembly">Assembly</option>
+        </select>
+        <button id="zone-finish" type="button">Save (Enter)</button>
+        <button id="zone-cancel" type="button">Cancel (Esc)</button>
       </div>
       <div class="toolbar-row" id="path-options" hidden>
         <span class="toolbar-label">Type</span>
@@ -632,6 +863,12 @@
       <span class="label">Night mode</span>
     </button>
 
+    <!-- Mobile floating pill dock — only two actions on mobile -->
+    <div class="mobile-dock">
+      <button id="mobile-live" class="mobile-dock-btn" type="button">Live view</button>
+      <button id="mobile-tour" class="mobile-dock-btn" type="button">Start tour</button>
+    </div>
+
     <div id="popup" class="bottom-card hidden">
       <div class="bottom-card-inner">
         <div class="bottom-card-text">
@@ -668,6 +905,7 @@
               <div class="stat-row"><span class="stat-label">Perimeter</span><span class="stat-value stat-perimeter">—</span></div>
             </div>
             <div class="modal-description">Full description will appear here.</div>
+            <button class="modal-expand" type="button">Swipe up · expand</button>
           </div>
         </div>
         <div class="modal-tour" hidden>

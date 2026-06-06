@@ -38,6 +38,7 @@ export const BUILDING_DETAILS = {
   },
   'School': {
     displayName: 'Riverside E.M. School',
+    scaleOverride: 60,
     // longDescription: `…`,
   },
   'Power Room': {
@@ -227,6 +228,7 @@ The Chapel of Hope therefore stands as more than a building—it is a testimony 
   },
   'Subbamma Hospital': {
     displayName: 'Subbamma Mission Hospital',
+    scaleOverride: 60,
     // longDescription: `…`,
   },
   'W': {

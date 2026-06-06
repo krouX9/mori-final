@@ -66,6 +66,7 @@ export class PathEditor {
 
   refreshPreview() {
     this.clearPreview();
+    if (!this.points.length) return;
     const markerMat = new THREE.MeshBasicMaterial({ color: 0xff8a3a });
     const markerGeo = new THREE.SphereGeometry(0.5, 10, 8);
     for (const p of this.points) {

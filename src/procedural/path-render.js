@@ -37,8 +37,8 @@ function getMat(type) {
     side: THREE.DoubleSide,
     // Sit slightly ahead of terrain in depth — same trick as zones.
     polygonOffset: true,
-    polygonOffsetFactor: -1,
-    polygonOffsetUnits: -1,
+    polygonOffsetFactor: -4,
+    polygonOffsetUnits: -4,
   });
   const texCfg = cfg.texKey ? CONFIG.textures?.[cfg.texKey] : null;
   if (texCfg) {

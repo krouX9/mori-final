@@ -56,11 +56,12 @@ export function buildZones(layout, sampleHeight) {
       color: style.color,
       roughness: 0.95,
       side: THREE.DoubleSide,
-      // Same polygon offset trick as terrain — paths layered above zones
-      // should win the depth fight.
+      // Pull the zone *forward* (negative offset) so it consistently wins
+      // the depth fight against the terrain underneath. Paths use a stronger
+      // negative offset, so they still layer on top of zones.
       polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
     });
 
     // Optional zone-specific texture. If the file is missing the zone stays
@@ -78,8 +79,10 @@ export function buildZones(layout, sampleHeight) {
     }
 
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.y = sampleHeight(cx, cz) + style.height;
+    // Bump up a touch above terrain so the polygon offset has air to breathe.
+    mesh.position.y = sampleHeight(cx, cz) + style.height + 0.06;
     mesh.receiveShadow = true;
+    mesh.renderOrder = 1; // draw after terrain so blending reads cleanly
     mesh.name = `zone:${zone.name}`;
     group.add(mesh);
   }

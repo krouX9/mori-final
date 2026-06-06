@@ -4,10 +4,12 @@ import { getDetailsFor } from '../data/building-details.js';
 const AUTO_ADVANCE_MS = 60_000;
 
 export class TourController {
-  constructor({ buildings, modal, audio }) {
+  constructor({ buildings, modal, audio, onShowStop, onStop }) {
     this.buildings = buildings;
     this.modal = modal;
     this.audio = audio;
+    this.onShowStop = onShowStop;   // fires every stop with the building
+    this.onStop = onStop;           // fires once when the tour ends
     this.order = TOUR_ORDER;
     this.currentIndex = -1;
     this.active = false;
@@ -44,12 +46,14 @@ export class TourController {
   }
 
   handleExternalClose() {
+    const wasActive = this.active;
     this.active = false;
     this.paused = false;
     this.clearTimer();
     if (this.audio) this.audio.stop();
     this.audioActive = false;
     this.notify();
+    if (wasActive && this.onStop) this.onStop();
   }
 
   stop() {
@@ -62,6 +66,7 @@ export class TourController {
     this.modal.onHide = null;
     if (wasActive) this.modal.hide();
     this.notify();
+    if (wasActive && this.onStop) this.onStop();
   }
 
   next() { this.advance(+1); }
@@ -111,6 +116,10 @@ export class TourController {
       if (this.audio) this.audio.stop();
       this.startTimer();
     }
+
+    // Tell the app which building this stop is on so it can run the camera
+    // sweep + float + dim around the focused model.
+    if (this.onShowStop) this.onShowStop(building);
   }
 
   audioFor(rawName) {

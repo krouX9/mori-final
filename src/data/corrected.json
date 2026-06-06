@@ -1,0 +1,62 @@
+{
+  "buildings": {
+    "b-8-5": { "name": "Conference Center", "position": [-17.346, -1.018, 179.312], "rotation": 1.5417, "scale": 59.1824 },
+    "b-9-6": { "name": "Smart Village Center", "position": [27.233, -1.565, 188.584], "rotation": 0, "scale": 0.7113 },
+    "b-10-7": { "name": "Washrooms", "position": [33.632, -0.015, 174.3], "rotation": -1.5509, "scale": 0.4176 },
+    "b-6-3": { "name": "Riverside E.M. School", "position": [32.837, 0.145, 41.609], "rotation": -1.5542, "scale": 60.17 },
+    "b-19-17": { "name": "School Washrooms", "position": [51.107, 0.468, -63.616], "rotation": -1.5432, "scale": 19.425 },
+    "b-18-16": { "name": "Subbamma Mission Hospital", "position": [92.343, -0.009, -87.256], "rotation": -1.5632, "scale": 60 },
+    "b-20-18": { "name": "Hospital Staff Quarters", "position": [83.429, 0.12, -138.168], "rotation": -1.5555, "scale": 37.8021 },
+    "b-21-13": { "name": "Subbamma House: The Birthplace of a Legacy", "position": [29.108, -0.071, -118.961], "rotation": 0.0103, "scale": 18.4984 },
+    "b-17-15": { "name": "Chapel of Hope: A Legacy of Faith, Perseverance, and Redemption", "position": [51.608, -0.039, -90.597], "rotation": 0, "scale": 21.0794 },
+    "b-16-14": { "name": "Anand Residency: A Legacy of Peace, Courage, and Hospitality", "position": [27.762, -0.646, -103.218], "rotation": -0.0159, "scale": 11.2109 },
+    "b-14-12": { "name": "Mike Van Daele Hall: A Story of Faith and Provision", "position": [12.376, -0.346, -138.705], "rotation": -1.5557, "scale": 19.9334 },
+    "b-11-9": { "name": "Isaacs Hall: A Story of Providence, Opportunity, and Vision", "position": [-5.459, -2.176, -114.544], "rotation": 0, "scale": 18.4984 },
+    "b-10-8": { "name": "Peniel Villa: A Place of Calling, Struggle, and Surrender", "position": [-14.512, -0.511, -87.538], "rotation": -1.5399, "scale": 19.6115 },
+    "b-12-10": { "name": "Bethel: The House of God", "position": [-28.361, -1.249, -115.394], "rotation": -1.5525, "scale": 20.9404 },
+    "b-13-11": { "name": "Hebron: A Place of Covenant, Family, and New Life", "position": [-53.016, -1.384, -114.147], "rotation": -1.5556, "scale": 19.752 },
+    "b-4-1": { "name": "Washrooms", "position": [-130.317, -1.757, -52.552], "rotation": 0, "scale": 0.2687 },
+    "b-3-0": { "name": "Auditorium", "position": [-115.741, -0.765, -15.65], "rotation": 0, "scale": 59.0557 },
+    "b-5-2": { "name": "Amy Dance Studio", "position": [-100.944, -1.126, 25.944], "rotation": 0, "scale": 20.3058 },
+    "b-7-4": { "name": "Power Room", "position": [75.491, 0.273, 134.459], "rotation": 0, "scale": 0.5698 },
+    "glb-GateofSalvationglb": { "name": "GateofSalvationglb", "position": [92.634, 0.293, 135.491], "rotation": -1.5644, "scale": 11.3154 },
+    "glb-SchoolGate": { "name": "SchoolGate", "position": [-19.859, -1.151, 134.301], "rotation": 1.564, "scale": 15.352 }
+  },
+  "paths": [
+    { "id": "p-mq268722", "type": "road", "points": [ { "x": 123.14, "z": 140.152 }, { "x": -161.022, "z": 139.021 } ]},
+    { "id": "p-mq26j5vh", "type": "pedestrian", "points": [ { "x": 91.937, "z": 133.064 }, { "x": 93.065, "z": -64.863 }, { "x": 119.807, "z": -73.573 }, { "x": 118.87, "z": -121.271 }, { "x": 66.576, "z": -131.47 } ]},
+    { "id": "p-mq26l23e", "type": "pedestrian", "points": [ { "x": -20.723, "z": 129.069 }, { "x": -19.651, "z": -81.231 } ]},
+    { "id": "p-mq26mk40", "type": "pedestrian", "points": [ { "x": -18.317, "z": 57.823 }, { "x": 62.838, "z": 61.629 }, { "x": 58.269, "z": -55.13 } ]},
+    { "id": "p-mq26pf1f", "type": "pedestrian", "points": [ { "x": -20.074, "z": -37.732 }, { "x": 20.051, "z": -99.99 }, { "x": 20.035, "z": -129.789 } ]},
+    { "id": "p-mq26pwoc", "type": "pedestrian", "points": [ { "x": 21.846, "z": -105.325 }, { "x": 4.177, "z": -107.02 }, { "x": 4.635, "z": -129.936 } ]},
+    { "id": "p-mq26uyhl", "type": "pedestrian", "points": [ { "x": 3.952, "z": -127.766 }, { "x": -15.133, "z": -128.548 }, { "x": -17.657, "z": -107.984 }, { "x": -68.595, "z": -106.471 } ]},
+    { "id": "p-mq26ylur", "type": "pedestrian", "points": [ { "x": -38.622, "z": -104.839 }, { "x": -34.152, "z": -42.612 }, { "x": -19.943, "z": -10.408 } ]},
+    { "id": "p-mq270ttf", "type": "pedestrian", "points": [ { "x": 1.322, "z": 24.772 }, { "x": -87.568, "z": 25.079 }, { "x": -90.333, "z": 133.476 } ]},
+    { "id": "p-mq2740n8", "type": "pedestrian", "points": [ { "x": -87.551, "z": 25.283 }, { "x": -86.17, "z": -42.969 }, { "x": -125.622, "z": -48.697 } ]},
+    { "id": "p-mq275loh", "type": "pedestrian", "points": [ { "x": -19.065, "z": 143.429 }, { "x": -18.492, "z": 162.498 } ]},
+    { "id": "p-mq276i27", "type": "pedestrian", "points": [ { "x": 24.001, "z": 143.282 }, { "x": 24.541, "z": 181.535 } ]},
+    { "id": "p-mq27eh7m", "type": "pedestrian", "points": [ { "x": 5.586, "z": -76.424 }, { "x": 63.195, "z": -77.748 }, { "x": 66.28, "z": -65.268 }, { "x": 92.499, "z": -63.14 } ]},
+    { "id": "p-mq27f6he", "type": "pedestrian", "points": [ { "x": 22.059, "z": -102.892 }, { "x": 22.199, "z": -79.534 }, { "x": 33.255, "z": -77.285 } ]},
+    { "id": "p-mq27fmxr", "type": "pedestrian", "points": [ { "x": 21.804, "z": -91.788 }, { "x": 46.911, "z": -91.113 } ]}
+  ],
+  "zones": [
+    { "id": "z-mq27p4rc", "type": "assembly", "name": "Assembly", "polygon": [
+      { "x": 2.783, "z": 26.243 }, { "x": 2.72, "z": 39.805 },
+      { "x": -18.672, "z": 39.12 }, { "x": -18.862, "z": 24.571 }
+    ]},
+    { "id": "z-mq27wj2m", "type": "garden", "name": "Garden", "polygon": [
+      { "x": -18.511, "z": 21.171 }, { "x": 49.561, "z": 26.094 },
+      { "x": 42.514, "z": -32.786 }, { "x": 41.799, "z": -35.832 },
+      { "x": 40.359, "z": -38.029 }, { "x": 37.988, "z": -41.304 },
+      { "x": 34.94, "z": -45.175 }, { "x": 31.653, "z": -47.495 },
+      { "x": 25.381, "z": -49.292 }, { "x": 20.101, "z": -49.272 },
+      { "x": 10.269, "z": -49.291 }, { "x": 1.618, "z": -48.382 },
+      { "x": -6.817, "z": -45.896 }, { "x": -12.732, "z": -39.967 },
+      { "x": -14.89, "z": -33.603 }
+    ]},
+    { "id": "z-mq29d1m7", "type": "playground", "name": "Playground", "polygon": [
+      { "x": -22.694, "z": 40.415 }, { "x": -23.451, "z": 109.639 },
+      { "x": -89.173, "z": 107.307 }, { "x": -89.599, "z": 38.735 }
+    ]}
+  ]
+}

@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { createProp } from '../assets/registry.js';
 import { getModelForBuilding, listUnmatchedModels } from '../assets/model-loader.js';
+import { getFileBuildingOverrides } from '../data/file-overrides.js';
+import { getDetailsFor } from '../data/building-details.js';
 
 const tmpBBox = new THREE.Box3();
 const tmpSize = new THREE.Vector3();
@@ -9,7 +11,9 @@ const tmpSize = new THREE.Vector3();
 // if a GLB does, the source is broken (origin at center, wrong units, etc.) —
 // clamping here keeps a single bad model from blotting the campus.
 function clampScale(s) {
-  return Math.max(0.05, Math.min(s, 30));
+  // Cap relaxed to 100 so explicit overrides (e.g. School & Hospital at 60)
+  // pass through without being silently capped.
+  return Math.max(0.05, Math.min(s, 100));
 }
 
 /**
@@ -17,8 +21,20 @@ function clampScale(s) {
  * Uses the smaller of the two dimension ratios (so the model never spills
  * over the lot in either axis), preserving proportions. Falls back to a
  * height-based default for spillover models without a lot.
+ *
+ * Per-building manual override: set `scaleOverride: <number>` on the
+ * building's entry in building-details.js (keyed by raw GeoJSON name) and
+ * the auto-fit is bypassed entirely.
  */
 function computeFitScale(model, lot) {
+  // Manual override always wins.
+  if (lot?.name) {
+    const details = getDetailsFor(lot.name);
+    if (details?.scaleOverride && Number.isFinite(details.scaleOverride)) {
+      return clampScale(details.scaleOverride);
+    }
+  }
+
   tmpBBox.setFromObject(model);
   tmpBBox.getSize(tmpSize);
 
@@ -41,12 +57,29 @@ function applyOverride(obj, lot, sampleHeight, ov, autoScale = 1) {
     obj.position.set(lot.x, sampleHeight(lot.x, lot.z), lot.z);
   }
   obj.rotation.y = (ov?.rotation != null) ? ov.rotation : lot.rotY;
-  obj.scale.setScalar(ov?.scale != null ? ov.scale : autoScale);
+
+  // Scale precedence (highest to lowest):
+  //   1. building-details.js `scaleOverride` — pinned by code, always wins
+  //   2. live / file override `ov.scale`     — manual dev tweaks
+  //   3. autoScale                            — auto-fit baseline
+  const details = lot?.name ? getDetailsFor(lot.name) : null;
+  if (Number.isFinite(details?.scaleOverride)) {
+    obj.scale.setScalar(details.scaleOverride);
+  } else if (ov?.scale != null) {
+    obj.scale.setScalar(ov.scale);
+  } else {
+    obj.scale.setScalar(autoScale);
+  }
 }
 
 export function placeBuildings(layout, sampleHeight, rng, overrides = {}) {
   const group = new THREE.Group();
   group.name = 'buildings';
+
+  // File baseline (corrected.json) merged underneath live localStorage edits.
+  const baseline = getFileBuildingOverrides();
+  const merged = { ...baseline, ...overrides };
+  overrides = merged;
 
   for (const lot of layout.buildingLots) {
     const model = getModelForBuilding(lot.name);

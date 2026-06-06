@@ -1,20 +1,31 @@
 import * as THREE from 'three';
-import { getBuildings, getPaths, getZones, getBounds } from '../data/geo-loader.js';
+import { getBuildings, getPaths, getBounds } from '../data/geo-loader.js';
 import { loadZones } from '../data/dev-storage.js';
+import { getFileZoneOverrides } from '../data/file-overrides.js';
+
+// Zones come from BOTH the corrected.json baseline AND the user's live
+// localStorage edits. Live wins by id so dev edits override the baseline.
+function loadDrawnZones() {
+  const fileZones = getFileZoneOverrides();
+  const stored = loadZones();
+  let liveZones = [];
+  if (Array.isArray(stored)) liveZones = stored;
+  else if (stored && typeof stored === 'object') {
+    // Legacy: stored was { 'Garden': { polygon: [...] } } — convert.
+    liveZones = Object.entries(stored).map(([name, v]) => ({
+      id: `legacy-${name}`,
+      name,
+      type: name.toLowerCase(),
+      polygon: v.polygon || [],
+    }));
+  }
+  const seenIds = new Set(liveZones.map((z) => z.id).filter(Boolean));
+  return [...liveZones, ...fileZones.filter((z) => !seenIds.has(z.id))];
+}
 
 const WALL_PADDING = 40;
 const ROAD_INSET = 12;
 
-function applyZoneOverrides(zones) {
-  const overrides = loadZones();
-  return zones.map((z) => {
-    const ov = overrides[z.name];
-    if (ov?.polygon?.length >= 3) {
-      return { ...z, polygon: ov.polygon.map((p) => ({ x: p.x, z: p.z })) };
-    }
-    return z;
-  });
-}
 
 export function generateLayout() {
   const layout = {
@@ -40,35 +51,14 @@ export function generateLayout() {
     });
   }
 
-  const paths = getPaths();
-  for (const line of paths.linestrings) {
-    for (let i = 0; i < line.length - 1; i++) {
-      layout.walkways.push({
-        a: new THREE.Vector2(line[i].x, line[i].z),
-        b: new THREE.Vector2(line[i + 1].x, line[i + 1].z),
-        width: 2.6,
-      });
-    }
-  }
-  for (const poly of paths.polygons) {
-    const ring = poly[0];
-    if (!ring?.length) continue;
-    let cx = 0, cz = 0;
-    for (const p of ring) { cx += p.x; cz += p.z; }
-    cx /= ring.length;
-    cz /= ring.length;
-    let r = 0;
-    for (const p of ring) r = Math.max(r, Math.hypot(p.x - cx, p.z - cz));
-    layout.plazas.push({ x: cx, z: cz, r });
-  }
+  // GeoJSON paths and plazas are intentionally NOT loaded any more — both
+  // paths and zones are drawn fresh in dev mode and persist via localStorage.
+  // layout.walkways / layout.plazas stay empty until the user draws.
 
-  layout.zones = applyZoneOverrides(
-    getZones().map((z) => ({
-      name: z.name,
-      type: z.type,
-      polygon: z.polygon.map((p) => ({ x: p.x, z: p.z })),
-    })),
-  );
+  // GeoJSON-baked zones are no longer rendered — user draws fresh zones
+  // through dev mode and they persist to localStorage via dev-storage.
+  // Anything in localStorage will hydrate here as a layout.zones entry.
+  layout.zones = loadDrawnZones();
 
   const b = getBounds();
   const corners = [

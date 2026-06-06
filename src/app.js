@@ -27,6 +27,7 @@ import { GPSController } from './gps/gps-controller.js';
 import { ProximityHighlight } from './gps/proximity-highlight.js';
 import { BuildingFloat } from './life/building-float.js';
 import { BuildingDim } from './life/building-dim.js';
+import { CameraIntro } from './scene/camera-intro.js';
 import { TourController } from './tour/tour-controller.js';
 import { TourAudio } from './tour/tour-audio.js';
 
@@ -48,6 +49,7 @@ const SCALE = (() => {
 })();
 import { getBounds } from './data/geo-loader.js';
 import { loadBuildings, loadPaths, exportAll, resetAll } from './data/dev-storage.js';
+import { getFilePathOverrides } from './data/file-overrides.js';
 import { loadAllModels } from './assets/model-loader.js';
 
 export class App {
@@ -78,7 +80,7 @@ export class App {
     this.layout = generateLayout();
     this.recenterCameraOnBounds();
 
-    const { mesh: terrain, sampleHeight } = createTerrain(this.layout.bounds);
+    const { mesh: terrain, sampleHeight } = createTerrain();
     this.scene.add(terrain);
     this.terrain = terrain;
     this.sampleHeight = sampleHeight;
@@ -90,7 +92,13 @@ export class App {
     this.zonesGroup = buildZones(this.layout, sampleHeight);
     this.scene.add(this.zonesGroup);
 
-    this.customPathsGroup = buildCustomPathsGroup(loadPaths(), sampleHeight);
+    // Custom paths come from BOTH the corrected.json baseline AND the
+    // user's live localStorage edits. Merge by id with localStorage winning.
+    const filePaths = getFilePathOverrides();
+    const livePaths = loadPaths();
+    const seenIds = new Set(livePaths.map((p) => p.id));
+    const mergedPaths = [...livePaths, ...filePaths.filter((p) => !seenIds.has(p.id))];
+    this.customPathsGroup = buildCustomPathsGroup(mergedPaths, sampleHeight);
     this.scene.add(this.customPathsGroup);
 
     await loadAllModels();
@@ -134,7 +142,7 @@ export class App {
     this.updatables.push(this.makeSunArc());
     this.updatables.push(createFlythrough(this.camera, this.controls));
 
-    this.modal = new BuildingModal(this.controls);
+    this.modal = new BuildingModal(this.controls, this);
     this.popup = new BuildingPopup(this.camera, this.modal);
     this.updatables.push(() => this.popup.update());
 
@@ -167,8 +175,11 @@ export class App {
       buildings: this.buildings,
       modal: this.modal,
       audio: this.tourAudio,
+      onShowStop: (building) => this.focusTourStop(building),
+      onStop: () => this.endTourFocus(),
     });
     this.setupTourButton();
+    this.setupMobileDock();
 
     // Shadow policy: only clouds occlude the sun's shadow map. Everything
     // else has castShadow=false. Done after every group is added so we
@@ -188,11 +199,17 @@ export class App {
 
   recenterCameraOnBounds() {
     const b = getBounds();
-    this.controls.target.set(b.cx, 4, b.cz);
+    const target = new THREE.Vector3(b.cx, 4, b.cz);
     const span = Math.max(b.maxX - b.minX, b.maxZ - b.minZ);
     const dist = Math.max(220, span * 1.0);
-    this.camera.position.set(b.cx + dist * 0.6, dist * 0.55, b.cz + dist * 0.85);
-    this.controls.update();
+    const finalPos = new THREE.Vector3(b.cx + dist * 0.6, dist * 0.55, b.cz + dist * 0.85);
+    // Remember overview pose — used to scale back out when modal closes.
+    this.overviewPos = finalPos.clone();
+    this.overviewTarget = target.clone();
+    // Drone intro animates from a higher / farther starting position to
+    // this overview pose.
+    this.intro = new CameraIntro(this.camera, this.controls, finalPos, target);
+    this.updatables.push((dt) => this.intro?.update(dt));
   }
 
   setClutterVisible(visible) {
@@ -224,10 +241,11 @@ export class App {
   }
 
   async initDevMode() {
-    const [{ TransformEditor }, { PathEditor }, { ZoneEditor }, { DevModeManager }] = await Promise.all([
+    const [{ TransformEditor }, { PathEditor }, { ZoneEditor }, { ZoneDrawEditor }, { DevModeManager }] = await Promise.all([
       import('./dev/transform-editor.js'),
       import('./dev/path-editor.js'),
       import('./dev/zone-editor.js'),
+      import('./dev/zone-draw-editor.js'),
       import('./dev/dev-mode-manager.js'),
     ]);
     this.transformEditor = new TransformEditor({
@@ -256,10 +274,19 @@ export class App {
       layout: this.layout,
       onUpdate: () => this.refreshZones(),
     });
+    this.zoneDrawEditor = new ZoneDrawEditor({
+      scene: this.scene,
+      camera: this.camera,
+      renderer: this.renderer,
+      terrain: this.terrain,
+      sampleHeight: this.sampleHeight,
+      onFinish: () => this.refreshZones(),
+    });
     this.devManager = new DevModeManager({
       transformEditor: this.transformEditor,
       pathEditor: this.pathEditor,
       zoneEditor: this.zoneEditor,
+      zoneDrawEditor: this.zoneDrawEditor,
       onModeChange: (m) => this.updateDevUI(m),
     });
     this.wireDevUI();
@@ -277,6 +304,13 @@ export class App {
     pathType?.addEventListener('change', () => this.devManager.setPathType(pathType.value));
     document.getElementById('path-finish')?.addEventListener('click', () => this.pathEditor.finishPath());
     document.getElementById('path-cancel')?.addEventListener('click', () => this.pathEditor.cancel());
+
+    // Zone draw buttons — these were missing wiring in a previous edit, so
+    // the Save button was a no-op. Hooking them up here.
+    const zoneType = document.getElementById('zone-type');
+    zoneType?.addEventListener('change', () => this.devManager.setZoneType(zoneType.value));
+    document.getElementById('zone-finish')?.addEventListener('click', () => this.zoneDrawEditor.finish());
+    document.getElementById('zone-cancel')?.addEventListener('click', () => this.zoneDrawEditor.cancel());
 
     document.getElementById('dev-simulate-gps')?.addEventListener('click', () => {
       if (this.gps.enabled) this.gps.disable();
@@ -349,6 +383,8 @@ export class App {
       btn.classList.toggle('active', btn.dataset.mode === mode);
     });
     document.getElementById('path-options').hidden = mode !== 'draw-path';
+    const zoneOpts = document.getElementById('zone-options');
+    if (zoneOpts) zoneOpts.hidden = mode !== 'draw-zone';
   }
 
   setDevStatus(msg) {
@@ -389,6 +425,54 @@ export class App {
       }
       obj.castShadow = isCloud;
     });
+  }
+
+  setupMobileDock() {
+    const live = document.getElementById('mobile-live');
+    const tour = document.getElementById('mobile-tour');
+
+    const setLiveLabel = (active) => {
+      if (!live) return;
+      live.textContent = active ? 'Stop live' : 'Live view';
+      live.classList.toggle('active', active);
+    };
+    const setTourLabel = (active) => {
+      if (!tour) return;
+      tour.textContent = active ? 'Stop tour' : 'Start tour';
+      tour.classList.toggle('active', active);
+    };
+
+    live?.addEventListener('click', async () => {
+      if (this.gps.enabled) {
+        this.gps.disable();
+        setLiveLabel(false);
+        return;
+      }
+      live.disabled = true;
+      try {
+        await this.gps.enableLive(); // asks for geolocation + compass perm
+        setLiveLabel(true);
+      } catch (err) {
+        console.warn('[live view]', err?.message || err);
+        alert(err?.message || 'Could not start live view.');
+      } finally {
+        live.disabled = false;
+      }
+    });
+
+    tour?.addEventListener('click', () => {
+      if (this.tour.isActive()) this.tour.stop();
+      else this.tour.start();
+    });
+
+    // Mirror state-changes from the existing controllers so the pill labels
+    // stay in sync whether the user starts something from the desktop UI or
+    // the dock.
+    const prevTourCb = this.tour.onStateChange;
+    this.tour.onStateChange = (active) => {
+      prevTourCb?.(active);
+      setTourLabel(active);
+    };
   }
 
   setupTourButton() {
@@ -480,7 +564,8 @@ export class App {
 
       if (this.devMode && this.devManager) {
         const mode = this.devManager.getMode();
-        if (mode === 'draw-path') { this.pathEditor.handleClick(e); return; }
+        if (mode === 'draw-path')  { this.pathEditor.handleClick(e); return; }
+        if (mode === 'draw-zone')  { this.zoneDrawEditor.handleClick(e); return; }
         if (mode === 'edit-zones') { this.zoneEditor.handleClick(e); return; }
       }
 
@@ -519,27 +604,39 @@ export class App {
     }
   }
 
-  /** Smoothly move the camera in toward `building`. Eased over ~1.2s. */
+  /** Smoothly move the camera so `building` fits nicely in the viewport. */
   focusCameraOn(building) {
     if (!building) return;
-    // GPS mode owns the camera (it tracks the user's real-world position
-    // every frame). Skipping the focus animation lets the proximity-highlight
-    // still pop the card + glow without yanking the camera off the user.
-    if (this.gps?.enabled) return;
-    const buildingPos = building.position.clone();
-    const height = building.userData?.modelSize?.h ?? 10;
-    // Keep the same horizontal direction the user was viewing from, just
-    // move closer — feels less abrupt than yanking to a fixed angle.
+    if (this.gps?.enabled) return;            // GPS owns the camera in live mode
+    if (this.intro?.active) this.intro.skip();
+
+    // Frame the *actual* world bbox of the building so the camera fits the
+    // model regardless of its scale override.
+    const bbox = new THREE.Box3().setFromObject(building);
+    const size = bbox.getSize(new THREE.Vector3());
+    const center = bbox.getCenter(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+
+    // Distance computed from the camera FOV so the bbox always fits with a
+    // ~30% margin around it.
+    const vFov = (this.camera.fov * Math.PI) / 180;
+    const fitDist = (maxDim / 2) / Math.tan(vFov / 2) * 1.35;
+
+    // Account for the BuildingFloat lift so we frame the lifted position.
+    const lift = 3.5;
+    const focusCenter = center.clone().add(new THREE.Vector3(0, lift, 0));
+
+    // Keep the user's current horizontal viewing direction; just close in.
     const dir = new THREE.Vector3()
-      .subVectors(this.camera.position, buildingPos)
+      .subVectors(this.camera.position, focusCenter)
       .setY(0);
-    if (dir.lengthSq() < 1) dir.set(1, 0, 1); // fallback if camera is directly above
+    if (dir.lengthSq() < 1) dir.set(1, 0, 1);
     dir.normalize();
-    const distance = Math.max(30, height * 2.2);
-    const endPos = buildingPos.clone()
-      .addScaledVector(dir, distance)
-      .add(new THREE.Vector3(0, height * 0.7 + 8, 0));
-    const endTarget = buildingPos.clone().setY(buildingPos.y + height * 0.4);
+
+    const endPos = focusCenter.clone()
+      .addScaledVector(dir, fitDist)
+      .add(new THREE.Vector3(0, size.y * 0.35, 0));
+    const endTarget = focusCenter;
 
     this.cameraFocus = {
       active: true,
@@ -549,6 +646,106 @@ export class App {
       startTarget: this.controls.target.clone(),
       endPos,
       endTarget,
+    };
+    this.controls.enabled = false;
+  }
+
+  /**
+   * Focus a tour stop. The framing shifts so the building doesn't sit under
+   * the tour panel:
+   *   - desktop: panel is on the RIGHT half → shift right (building lands left)
+   *   - mobile:  panel covers the BOTTOM half → shift down (building lands top)
+   */
+  focusTourStop(building) {
+    if (!building) return;
+    if (this.gps?.enabled) return;
+    if (this.intro?.active) this.intro.skip();
+
+    const mobile = window.matchMedia('(max-width: 768px)').matches;
+
+    const bbox = new THREE.Box3().setFromObject(building);
+    const size = bbox.getSize(new THREE.Vector3());
+    const center = bbox.getCenter(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+
+    const vFov = (this.camera.fov * Math.PI) / 180;
+    // Slightly tighter framing on mobile because the panel only covers half
+    // the screen and the building is the focus.
+    const fitDist = (maxDim / 2) / Math.tan(vFov / 2) * (mobile ? 1.45 : 1.55);
+
+    const lift = 3.5;
+    const focusCenter = center.clone().add(new THREE.Vector3(0, lift, 0));
+
+    const dir = new THREE.Vector3()
+      .subVectors(this.camera.position, focusCenter)
+      .setY(0);
+    if (dir.lengthSq() < 1) dir.set(1, 0, 1);
+    dir.normalize();
+
+    const endPos = focusCenter.clone()
+      .addScaledVector(dir, fitDist)
+      .add(new THREE.Vector3(0, size.y * 0.35, 0));
+    const endTarget = focusCenter.clone();
+
+    // Build the camera basis at the final pose so we can pan in screen-axes.
+    const fwd = new THREE.Vector3().subVectors(endTarget, endPos).normalize();
+    const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize();
+    const camUp = new THREE.Vector3().crossVectors(right, fwd).normalize();
+
+    if (mobile) {
+      // Pan the whole frame DOWN — shifting camera + target by the same
+      // vector preserves the view direction but moves the world up in
+      // screen space, so the building reads as centred in the visible top
+      // half rather than sitting behind the modal.
+      const halfHeight = fitDist * Math.tan(vFov / 2);
+      const shift = halfHeight * 0.42;
+      endTarget.addScaledVector(camUp, -shift);
+      endPos.addScaledVector(camUp, -shift);
+    } else {
+      // Desktop tour: panel on the right, push the building to the left.
+      const halfWidth = fitDist * Math.tan(vFov / 2) * this.camera.aspect;
+      const shift = halfWidth * 0.5;
+      endTarget.addScaledVector(right, shift);
+      endPos.addScaledVector(right, shift);
+    }
+
+    // Hide the leftover "Read more" bottom card if the user had a popup
+    // open from a previous click — during tour the modal is the surface.
+    this.popup?.hide();
+    this.currentTarget = null;
+
+    this.float?.setActive(building);
+    this.dim?.activate(building);
+
+    this.cameraFocus = {
+      active: true,
+      t: 0,
+      duration: 1.2,
+      startPos: this.camera.position.clone(),
+      startTarget: this.controls.target.clone(),
+      endPos,
+      endTarget,
+    };
+    this.controls.enabled = false;
+  }
+
+  endTourFocus() {
+    this.float?.clear();
+    this.dim?.clear();
+    this.zoomToOverview();
+  }
+
+  /** Pull camera back to the saved overview pose (called from modal close). */
+  zoomToOverview() {
+    if (!this.overviewPos) return;
+    this.cameraFocus = {
+      active: true,
+      t: 0,
+      duration: 1.4,
+      startPos: this.camera.position.clone(),
+      startTarget: this.controls.target.clone(),
+      endPos: this.overviewPos.clone(),
+      endTarget: this.overviewTarget.clone(),
     };
     this.controls.enabled = false;
   }
@@ -564,7 +761,10 @@ export class App {
     this.controls.target.lerpVectors(cf.startTarget, cf.endTarget, e);
     if (p >= 1) {
       cf.active = false;
-      this.controls.enabled = true;
+      // Don't re-enable OrbitControls while a modal still owns them — both
+      // the tour modal and the normal popup-modal want them disabled. They
+      // restore themselves on hide().
+      if (!this.modal?.isOpen()) this.controls.enabled = true;
     }
   }
 
@@ -595,12 +795,11 @@ export class App {
     const dt = this.clock.getDelta();
     const elapsed = this.clock.elapsedTime;
 
-    // When the modal is open the scene is almost entirely occluded by the
-    // backdrop, but both renderers were still running every frame. Skip the
-    // main composer work entirely — the modal's mini-renderer keeps going,
-    // and the dimmed scene we leave behind is fine through the 55%-opacity
-    // backdrop.
-    if (this.modal?.isOpen()) return;
+    // Skip the main scene render ONLY when the modal is in its normal full
+    // overlay state. During a tour the left half of the screen IS the live
+    // campus — we need updateCameraFocus + the bird/cloud/float updates to
+    // keep running so the focused building hovers in view.
+    if (this.modal?.isOpen() && !this.tour?.isActive()) return;
 
     for (const u of this.updatables) u(dt, elapsed);
     this.updateCameraFocus(dt);
