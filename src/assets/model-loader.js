@@ -2,10 +2,10 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
-// Discover GLBs at build time. Files that don't exist in src/assets/models/
+// Discover GLBs at build time. Files that don't exist in src/assets/Models/
 // simply don't appear in `modelGlob` — no failed imports and no 500s if
 // you've stripped the folder for a fast dev iteration.
-const modelGlob = import.meta.glob('./models/*.glb', {
+const modelGlob = import.meta.glob('./Models/*.glb', {
   query: '?url',
   import: 'default',
   eager: true,
@@ -117,7 +117,7 @@ function optimizeTextures(model) {
 export async function loadAllModels() {
   const entries = Object.entries(MODEL_URLS);
   if (entries.length === 0) {
-    console.log('[models] No GLB files in src/assets/models/ — every building will render as a placeholder.');
+    console.log('[models] No GLB files in src/assets/Models/ — every building will render as a placeholder.');
     return loadedModels;
   }
   console.log(`[models] Loading ${entries.length} GLBs…`);
