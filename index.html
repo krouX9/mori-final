@@ -22,6 +22,83 @@
       #app { position: fixed; inset: 0; }
       canvas { display: block; width: 100%; height: 100%; }
 
+      /* ============================================================
+         Loading screen
+         ============================================================ */
+      #loading {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(ellipse at 50% 30%, #f7d9a8 0%, #ecc187 70%, #d8a86d 100%);
+        z-index: 30;
+        text-align: center;
+        padding: 0 32px;
+        pointer-events: none;
+        color: rgba(40, 25, 10, 0.78);
+        font: 600 14px/1.5 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        letter-spacing: 0.02em;
+        animation: loading-screen-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      @keyframes loading-screen-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+      }
+
+      .loading-inner {
+        max-width: 680px;
+        animation: loading-content-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both;
+      }
+      @keyframes loading-content-rise {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .loading-eyebrow {
+        font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: rgba(40, 25, 10, 0.5);
+        margin-bottom: 28px;
+      }
+
+      .loading-title {
+        font: 500 34px/1.2 -apple-system, BlinkMacSystemFont,
+              'SF Pro Display', 'Inter', system-ui, sans-serif;
+        letter-spacing: -0.02em;
+        color: #2a1a08;
+        margin: 0 0 42px;
+        text-wrap: balance;
+      }
+
+      .loading-dots {
+        display: inline-flex;
+        gap: 9px;
+        align-items: center;
+        justify-content: center;
+      }
+      .loading-dots span {
+        display: block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #2a1a08;
+        opacity: 0.3;
+        animation: loading-dot 1.3s infinite ease-in-out both;
+      }
+      .loading-dots span:nth-child(2) { animation-delay: 0.18s; }
+      .loading-dots span:nth-child(3) { animation-delay: 0.36s; }
+      @keyframes loading-dot {
+        0%, 70%, 100% { transform: scale(0.55); opacity: 0.3; }
+        35%           { transform: scale(1);    opacity: 1; }
+      }
+
+      @media (max-width: 640px) {
+        .loading-title { font-size: 24px; margin-bottom: 36px; }
+        .loading-eyebrow { font-size: 10px; letter-spacing: 0.28em; margin-bottom: 22px; }
+      }
+
       .hint {
         position: fixed; left: 18px; bottom: 16px;
         font: 12px/1.4 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -659,6 +736,9 @@
         }
         .modal.is-mobile.is-tour .modal-text { padding: 26px 22px 16px; }
         .modal.is-mobile.is-tour .modal-title { font-size: 20px; }
+        /* Hide the "Swipe up · expand" pill during tour — that flow is for
+           the reading modal, not the tour, and it overlaps the tour bar. */
+        .modal.is-mobile.is-tour .modal-expand { display: none; }
 
         /* Mobile tour bar — restructure as a stacked layout that always
            fits in two clean rows: info on top, action buttons below. */
@@ -800,7 +880,15 @@
   </head>
   <body>
     <div id="app"></div>
-    <div id="loading" style="position:fixed;inset:0;display:grid;place-items:center;color:rgba(40,30,20,0.78);font:600 18px/1.4 -apple-system,system-ui,sans-serif;letter-spacing:0.05em;background:#f4d2a5;z-index:30;pointer-events:none;text-align:center;padding:0 24px;">Welcome to Project India Compassion Trust</div>
+    <div id="loading">
+      <div class="loading-inner">
+        <div class="loading-eyebrow">Mori Campus</div>
+        <h1 class="loading-title">Welcome to Project India Compassion Trust</h1>
+        <div class="loading-dots" role="status" aria-label="Loading">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
     <div class="hint">drag to orbit · scroll to zoom · right-drag or WASD to pan · F flythrough · click a building</div>
 
     <div id="dev-toolbar">

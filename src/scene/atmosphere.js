@@ -3,9 +3,13 @@ import { CONFIG } from '../config.js';
 
 export function setupAtmosphere(scene) {
   scene.background = CONFIG.palette.fog.clone();
-  // Volumetric fog — softens the horizon and blurs distant geometry so it
-  // melts into the sky. CONFIG.fog.density controls the strength.
-  scene.fog = new THREE.FogExp2(CONFIG.palette.fog, CONFIG.fog.density);
+  // Mobile reduces fog density: the camera tends to sit further from the
+  // campus on small screens (more world fits in frame), and the full fog
+  // strength makes the scene look washed out at that scale.
+  const mobile = typeof window !== 'undefined'
+    && window.matchMedia?.('(max-width: 768px)').matches;
+  const density = CONFIG.fog.density * (mobile ? 0.45 : 1);
+  scene.fog = new THREE.FogExp2(CONFIG.palette.fog, density);
   scene.add(createSkydome());
 }
 

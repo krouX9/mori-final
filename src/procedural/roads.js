@@ -14,10 +14,11 @@ export function buildRoadsAndPaths(layout, sampleHeight) {
     roughness: 0.9,
   });
 
-  for (const w of layout.walkways) {
-    const seg = makeSegment(w.a, w.b, w.width, pathMat, sampleHeight, 0.08);
-    if (seg) group.add(seg);
-  }
+  // NB: layout.walkways is no longer rendered here. It's populated from the
+  // drawn paths (corrected.json + localStorage) so that lamps, shrubs and
+  // the isOccupied tests can use the same segment data, but the actual
+  // ribbon meshes come from buildCustomPathsGroup (smooth CatmullRom). If
+  // we rendered them here too we'd get visible double-paths in the scene.
   for (const r of layout.roads) {
     const seg = makeSegment(r.a, r.b, r.width, roadMat, sampleHeight, 0.1);
     if (seg) group.add(seg);

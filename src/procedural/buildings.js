@@ -88,14 +88,16 @@ export function placeBuildings(layout, sampleHeight, rng, overrides = {}) {
     const autoScale = model ? computeFitScale(b, lot) : 1;
     applyOverride(b, lot, sampleHeight, overrides[lot.id], autoScale);
 
+    const details = getDetailsFor(lot.name);
     b.userData.info = {
       id: lot.id,
-      name: lot.displayName || lot.name,
+      name: details?.displayName || lot.displayName || lot.name,
       rawName: lot.name,
       area: lot.area,
       perimeter: lot.perimeter,
       description: lot.shortDescription || 'Campus facility',
-      longDescription: lot.longDescription || `Description for ${lot.displayName || lot.name} coming soon.`,
+      longDescription: details?.longDescription || lot.longDescription || `Description for ${lot.displayName || lot.name} coming soon.`,
+      gallery: details?.gallery || [],
     };
     b.userData.clickable = true;
     b.userData.buildingId = lot.id;

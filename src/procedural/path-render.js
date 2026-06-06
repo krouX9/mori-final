@@ -3,9 +3,9 @@ import { CONFIG } from '../config.js';
 
 export const PATH_TYPES = {
   pedestrian: { width: 2.4, color: 0xe6d2a7, yOffset: 0.14, label: 'Pedestrian', texKey: 'pedestrianPath' },
-  cycle:      { width: 1.8, color: 0xb6896c, yOffset: 0.13, label: 'Cycle',      texKey: 'pedestrianPath' },
-  service:    { width: 4.0, color: 0x6c6c60, yOffset: 0.12, label: 'Service road', texKey: 'roadPath' },
-  road:       { width: 6.0, color: 0x52524c, yOffset: 0.11, label: 'Road',       texKey: 'roadPath' },
+  cycle:      { width: 2.4, color: 0xb6896c, yOffset: 0.13, label: 'Cycle',      texKey: 'pedestrianPath' },
+  service:    { width: 4.8, color: 0x6c6c60, yOffset: 0.12, label: 'Service road', texKey: 'roadPath' },
+  road:       { width: 7.2, color: 0x52524c, yOffset: 0.11, label: 'Road',       texKey: 'roadPath' },
 };
 
 const textureLoader = new THREE.TextureLoader();

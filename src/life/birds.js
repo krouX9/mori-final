@@ -17,24 +17,24 @@ import { CONFIG } from '../config.js';
 //  each bird write a position + heading. Cheap on mobile.
 // ============================================================================
 
-const FLOCK_RADIUS    = 220;   // base radius of orbit (m)
-const FLOCK_ALT       = 90;    // base altitude (m)
-const ORBIT_SPEED     = 0.04;  // rad/sec — slow, majestic
+const FLOCK_RADIUS = 150;   // base radius of orbit (m)
+const FLOCK_ALT = 65;    // base altitude (m)
+const ORBIT_SPEED = 0.08;  // rad/sec — slow, majestic
 const RADIAL_SWAY_AMP = 18;    // metres in / out
 const RADIAL_SWAY_FREQ = 0.07;
 const VERTICAL_SWAY_AMP = 7;
 const VERTICAL_SWAY_FREQ = 0.11;
 
-const FORMATION_FWD   = 28;    // metres of spread front-to-back in formation
+const FORMATION_FWD = 28;    // metres of spread front-to-back in formation
 const FORMATION_RIGHT = 36;    // metres of spread left-to-right
-const FORMATION_UP    = 10;    // metres of spread up-down
+const FORMATION_UP = 10;    // metres of spread up-down
 
 // Reusable scratch vectors — zero allocation in the hot loop.
-const _fwd   = new THREE.Vector3();
+const _fwd = new THREE.Vector3();
 const _right = new THREE.Vector3();
-const _up    = new THREE.Vector3(0, 1, 0);
+const _up = new THREE.Vector3(0, 1, 0);
 const _worldOffset = new THREE.Vector3();
-const _lookTarget  = new THREE.Vector3();
+const _lookTarget = new THREE.Vector3();
 
 export function createBirdsSystem(rng) {
   const group = new THREE.Group();
@@ -47,13 +47,13 @@ export function createBirdsSystem(rng) {
     birds.push({
       bird,
       // Formation offset in flock-local frame (forward, right, up).
-      offFwd:   (rng() - 0.5) * FORMATION_FWD,
+      offFwd: (rng() - 0.5) * FORMATION_FWD,
       offRight: (rng() - 0.5) * FORMATION_RIGHT,
-      offUp:    (rng() - 0.5) * FORMATION_UP,
+      offUp: (rng() - 0.5) * FORMATION_UP,
       // Per-bird wing animation params for variety.
       wingPhase: rng() * Math.PI * 2,
-      wingFreq:  3.4 + rng() * 1.3,
-      bobPhase:  rng() * Math.PI * 2,
+      wingFreq: 0.8 + rng() * 0.5,
+      bobPhase: rng() * Math.PI * 2,
     });
     group.add(bird);
   }
@@ -93,7 +93,12 @@ export function createBirdsSystem(rng) {
           _lookTarget.z + _worldOffset.z,
         );
         // Wing flap.
-        const flap = Math.sin(elapsed * b.wingFreq + b.wingPhase) * 0.55;
+        const flapCycle = Math.max(
+          0,
+          Math.sin(elapsed * b.wingFreq + b.wingPhase)
+        );
+
+        const flap = flapCycle * 0.35;
         b.bird.userData.leftWing.rotation.z = flap;
         b.bird.userData.rightWing.rotation.z = -flap;
       }
@@ -109,14 +114,14 @@ function makeBird() {
   wingGeo.setAttribute(
     'position',
     new THREE.BufferAttribute(new Float32Array([
-      0,   0, 0,
+      0, 0, 0,
       0.7, 0, -0.3,
-      0.5, 0,  0.3,
+      0.5, 0, 0.3,
     ]), 3),
   );
   wingGeo.computeVertexNormals();
 
-  const leftWing  = new THREE.Mesh(wingGeo, mat);
+  const leftWing = new THREE.Mesh(wingGeo, mat);
   const rightWing = new THREE.Mesh(wingGeo, mat);
   rightWing.scale.x = -1;
   group.add(leftWing, rightWing);

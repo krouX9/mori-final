@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { getBuildings, getPaths, getBounds } from '../data/geo-loader.js';
-import { loadZones } from '../data/dev-storage.js';
-import { getFileZoneOverrides } from '../data/file-overrides.js';
+import { loadPaths, loadZones } from '../data/dev-storage.js';
+import { getFilePathOverrides, getFileZoneOverrides } from '../data/file-overrides.js';
+import { PATH_TYPES } from './path-render.js';
 
 // Zones come from BOTH the corrected.json baseline AND the user's live
 // localStorage edits. Live wins by id so dev edits override the baseline.
@@ -51,9 +52,28 @@ export function generateLayout() {
     });
   }
 
-  // GeoJSON paths and plazas are intentionally NOT loaded any more — both
-  // paths and zones are drawn fresh in dev mode and persist via localStorage.
-  // layout.walkways / layout.plazas stay empty until the user draws.
+  // GeoJSON paths and plazas are no longer loaded. Instead the drawn paths
+  // (from corrected.json + live localStorage edits) are expanded into
+  // layout.walkways here so the existing props / vegetation systems pick
+  // them up automatically — lamps spaced along their segments, shrubs
+  // hugging the curves, etc.
+  const filePaths = getFilePathOverrides();
+  const livePaths = loadPaths();
+  const seenPathIds = new Set(livePaths.map((p) => p.id).filter(Boolean));
+  const allPaths = [...livePaths, ...filePaths.filter((p) => !seenPathIds.has(p.id))];
+  for (const path of allPaths) {
+    const pts = path?.points;
+    if (!Array.isArray(pts) || pts.length < 2) continue;
+    const width = PATH_TYPES[path.type]?.width ?? 2.6;
+    for (let i = 0; i < pts.length - 1; i++) {
+      layout.walkways.push({
+        a: new THREE.Vector2(pts[i].x, pts[i].z),
+        b: new THREE.Vector2(pts[i + 1].x, pts[i + 1].z),
+        width,
+        type: path.type,
+      });
+    }
+  }
 
   // GeoJSON-baked zones are no longer rendered — user draws fresh zones
   // through dev mode and they persist to localStorage via dev-storage.

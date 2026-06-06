@@ -88,8 +88,12 @@ export class BuildingModal {
     if (!this.galleryEl) return;
     const images = info?.gallery || [];
     if (images.length) {
+      const base = import.meta.env?.BASE_URL || '/';
       this.galleryEl.innerHTML = images
-        .map((src) => `<div class="modal-gallery-item"><img src="${src}" alt="" /></div>`)
+        .map((src) => {
+          const url = (src.startsWith('http') || src.startsWith('/')) ? src : (base + src);
+          return `<div class="modal-gallery-item"><img src="${url}" alt="" /></div>`;
+        })
         .join('');
       this.galleryEl.classList.remove('is-empty');
     } else {

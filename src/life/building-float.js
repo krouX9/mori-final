@@ -12,10 +12,10 @@
 // ============================================================================
 
 const LIFT_HEIGHT = 3.5;   // metres of rise above the ground
-const ROT_SPEED   = 0.4;   // rad/sec while floating (~23°/sec)
-const BOB_AMP     = 0.35;  // metres of vertical hover
-const BOB_FREQ    = 1.0;   // Hz-ish, scaled with lift so it eases in
-const LERP_SPEED  = 3.0;   // exponential approach rate for lift
+const ROT_SPEED = 0.4;   // rad/sec while floating (~23°/sec)
+const BOB_AMP = 0.35;  // metres of vertical hover
+const BOB_FREQ = 1.0;   // Hz-ish, scaled with lift so it eases in
+const LERP_SPEED = 3.0;   // exponential approach rate for lift
 
 export class BuildingFloat {
   constructor(buildings) {

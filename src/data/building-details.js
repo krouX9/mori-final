@@ -23,22 +23,35 @@
 //  paragraph breaks in the modal (white-space: pre-line).
 // ============================================================================
 
+
 export const BUILDING_DETAILS = {
   'Jessy Flora Center': {
     displayName: 'Auditorium',
     // longDescription: `…`,
+    gallery: [
+      'images/Auditorium.webp',
+    ]
   },
   'W1': {
     displayName: 'Washrooms',
+    gallery: [
+      'images/SchoolWashrooms.webp',
+    ]
     // longDescription: `…`,
   },
   'Amy Dance Studio': {
     displayName: 'Amy Dance Studio',
+    gallery: [
+      'images/AmyDanceStudio.webp',
+    ]
     // longDescription: `…`,
   },
   'School': {
     displayName: 'Riverside E.M. School',
     scaleOverride: 60,
+    gallery: [
+      'images/School.webp',
+    ]
     // longDescription: `…`,
   },
   'Power Room': {
@@ -48,6 +61,9 @@ export const BUILDING_DETAILS = {
   'Conference Center': {
     displayName: 'Conference Center',
     // longDescription: `…`,
+    gallery: [
+      'images/ConferenceCenter.webp',
+    ]
   },
   'Smart Village Center': {
     displayName: 'Smart Village Center',
@@ -73,6 +89,9 @@ Years later, Solomon Darwin would return repeatedly to Mori, helping expand mini
 Thus, Peniel Villa symbolizes more than a residence. It represents a lifelong journey of wrestling with purpose, returning to one's calling, and recognizing that blessings often emerge through hardship and surrender.
 Like Jacob at Peniel, transformation came not through ease, but through persistence.
 The building stands as a reminder that some callings are shaped long before they are understood—and some prayers offered in desperation continue to echo across generations.`,
+    gallery: [
+      'images/PenielVilla.webp',
+    ]
   },
   'Teachers Quaters': {
     displayName: 'Isaacs Hall: A Story of Providence, Opportunity, and Vision',
@@ -106,6 +125,9 @@ Years earlier, Subbamma's husband, Anandham, while taking his final breaths on t
 What was once quiet rice fields eventually became a center for education, healthcare, ministry, and international collaboration, serving thousands through schools, medical outreach, and community development initiatives.
 In later years, Isaacs Hall became residential housing for students and later for teachers at Riverside International School, continuing its legacy of supporting those dedicated to educating and mentoring future generations.
 To many who know the history of Mori, the transformation of the rice fields into campuses of learning, healing, and service stands as a reminder that visions born in faith can extend far beyond one generation.`,
+    gallery: [
+      'images/IsaacHall.webp',
+    ]
   },
   'Wephel Villa': {
     displayName: 'Bethel: The House of God',
@@ -123,6 +145,9 @@ Generations later, the same grounds that once housed a temple—and later became
 In this way, the legacy continues.
 What began with Subbamma assisting births in village homes has grown into a ministry of healthcare through doctors, nurses, and hospitals serving future generations.
 Bethel stands as a testimony to transformation—of place, purpose, and legacy—from temple, to home, to healing ministry.`,
+    gallery: [
+      'images/BethelVilla.webp',
+    ]
   },
   'Hebron Villa': {
     displayName: 'Hebron: A Place of Covenant, Family, and New Life',
@@ -143,6 +168,10 @@ It symbolizes continuity across generations: from village births to hospital del
 Standing beside Bethel, the House of God, Hebron reflects another enduring truth—that faith, family, healing, and future generations remain deeply connected.
 
 The residence serves as a reminder that every child welcomed safely into the world carries the possibility of transforming future generations, just as the lives of Subbamma and her family transformed Mori.`,
+    gallery: [
+      'images/HebronVilla.webp',
+    ]
+
   },
   'Mike Van Daele Hall': {
     displayName: 'Mike Van Daele Hall: A Story of Faith and Provision',
@@ -158,6 +187,9 @@ For many, the hall became a testimony that the prayers of children had been hear
 What emerged was more than a dormitory. It provided students with something many had never experienced before: their own bed, protection from mosquitoes, access to running water, showers, sanitation facilities, and a safe environment conducive to study and growth.
 Mike Van Daele Hall became a place of dignity, security, and opportunity—allowing generations of students to live, learn, and pursue an education that might otherwise have remained beyond reach.
 The building stands as a reminder that some of the most significant transformations begin with simple prayers offered in faith.`,
+    gallery: [
+      'images/MikeVanDaeleHall.webp',
+    ]
   },
   'Subbamma House': {
     displayName: 'Subbamma House: The Birthplace of a Legacy',
@@ -188,6 +220,9 @@ Berkeley Smart Village Movement (2016), Mori Village later became the birthplace
 The once isolated and neglected road to Mori later became a corridor of innovation, hosting pilot projects by 86 Silicon Valley companies, whose technologies and models were showcased to the Chief Minister of Andhra Pradesh 
 What began as the faith journey of a persecuted widow in a humble thatched hut evolved into a legacy of worship, education, healing, womens empowerment, innovation, and service.
 Across generations, Subbamma's story demonstrates how courage, perseverance, and faith can transform not only a family, but an entire community—impacting lives from village pathways to hospitals, schools, churches, and global partnerships.`,
+    gallery: [
+      'images/SubbammaHouse.webp',
+    ]
   },
   'Happiness and Peace': {
     displayName: 'Anand Residency: A Legacy of Peace, Courage, and Hospitality',
@@ -203,6 +238,9 @@ Jaideep Mukerji
 Dr. Nang Khan and family 
 Today, Anand Residency serves as accommodation for guest faculty, school and hospital staff, visiting professionals, and international teams, continuing a longstanding tradition of hospitality.
 More than a residence, Anand Residency honors a pioneer whose life crossed boundaries of caste, education, geography, and faith—from cattle fields in Mori, to leadership in Burma, to becoming the first Christian man in his village. The transformation of the land itself—from pasture to a place welcoming educators and guests from around the world—mirrors the transformation his life inspired across generations.`,
+    gallery: [
+      'images/AnandResidency.webp',
+    ]
   },
   'Subbamma Chapel': {
     displayName: 'Chapel of Hope: A Legacy of Faith, Perseverance, and Redemption',
@@ -225,19 +263,31 @@ New business ventures and a commitment to educating her children
 Through perseverance and faith, what began in hardship became a story of extraordinary restoration.
 In Mori, God's blessing upon Subbamma's family was witnessed across generations. Her elder son became the first person from the untouchable community in the state to earn a PhD, while her younger son became the first medical doctor from the untouchable community. Their achievements reflected not only personal determination but also the transformative power of education, faith, and opportunity.
 The Chapel of Hope therefore stands as more than a building—it is a testimony that lives marked by rejection and suffering can become instruments of healing, leadership, and hope for future generations.`,
+    gallery: [
+      'images/ChappelofHope.webp',
+    ]
   },
   'Subbamma Hospital': {
     displayName: 'Subbamma Mission Hospital',
     scaleOverride: 60,
+    gallery: [
+      'images/Hospital.webp',
+    ]
     // longDescription: `…`,
   },
   'W': {
     displayName: 'School Washrooms',
+    gallery: [
+      'images/SchoolWashrooms.webp',
+    ]
     // longDescription: `…`,
   },
   'Hospital Staff Quaters': {
     displayName: 'Hospital Staff Quarters',
     // longDescription: `…`,
+    gallery: [
+      'images/HospitalStaffQuarters.webp',
+    ]
   },
 };
 
